@@ -3,13 +3,13 @@ package network
 import (
 	"bytes"
 	"io"
-	"log"
 	"os"
 	"regexp"
 	"strings"
 
 	"github.com/dailymotion/asteroid/internal"
 	"github.com/olekukonko/tablewriter"
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -66,7 +66,8 @@ func RetrieveIPs(conn *ssh.Client) ([]map[string]string, error) {
 	command := "sudo wg"
 	stdOut, stdErr, err := RunCommand(conn, command)
 	if err != nil {
-		log.Fatalf("\nError with runCommand: %v\nStdErr: %v", err, stdErr)
+		return listPeers, errors.Wrapf(err, "Error with runCommand.\nStdErr: %v", stdErr)
+		//log.Fatalf("\nError with runCommand: %v\nStdErr: %v", err, stdErr)
 	}
 
 	s, err := ReaderToString(stdOut)
@@ -81,12 +82,14 @@ func RetrieveIPs(conn *ssh.Client) ([]map[string]string, error) {
 		// regex for the ip
 		regexFindIP, err := regexp.Compile(`(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`)
 		if err != nil {
-			log.Fatalf("\nError with compiling Regex: %v\n", err)
+			return listPeers, errors.Wrapf(err, "Error compiling Regex to find IPs\n")
+			//log.Fatalf("\nError with compiling Regex: %v\n", err)
 		}
 		// regex for the address
 		findPeerKey, err := regexp.Compile(`peer:\s(\W.+|\w.+)`)
 		if err != nil {
-			log.Fatalf("\nError with compiling Regex: %v\n", err)
+			return listPeers, errors.Wrapf(err, "Error compiling Regex to find peer key\n")
+			//log.Fatalf("\nError with compiling Regex: %v\n", err)
 		}
 
 		regex := regexFindIP.FindStringSubmatch(line)

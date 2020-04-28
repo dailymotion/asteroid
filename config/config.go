@@ -4,10 +4,10 @@ import (
 	"io/ioutil"
 	"os"
 	"os/user"
-	"strings"
 	"reflect"
-	"fmt"
+	"strings"
 
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
 )
 
@@ -56,31 +56,34 @@ func ReadConfigFile() (Config, error) {
 	_, err = os.Stat(path)
 	// create file if not exists
 	if os.IsNotExist(err) {
-		return configWG, err
+		return configWG, errors.Wrap(err, "couldn't create file")
 	}
 
 	// reading file
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
-		return configWG, err
+		return configWG, errors.Wrap(err, "couldn't read file")
 	}
 
 	err = yaml.Unmarshal(data, &configWG)
 	if err != nil {
-		return configWG, err
+		return configWG, errors.Wrap(err, "error unmarshal data")
 	}
 
 	listMissing, isNil := isStructNil(configWG)
 	if isNil {
 		if len(listMissing) == 1 {
-			fmt.Printf("\nThe field %v in your config file is missing\n", listMissing)
-			os.Exit(1)
+			return configWG, errors.Wrapf(err, "\nThe field %v in your config file is missing\n", listMissing)
+			//fmt.Printf("\nThe field %v in your config file is missing\n", listMissing)
+			//os.Exit(1)
 		} else  if len(listMissing) >= 2 {
-			fmt.Printf("\nThe fields %v in your config file are missing\n", listMissing)
-			os.Exit(1)
+			return configWG, errors.Wrapf(err, "\nThe fields %v in your config file are missing\n", listMissing)
+			//fmt.Printf("\nThe fields %v in your config file are missing\n", listMissing)
+			//os.Exit(1)
 		} else {
-			fmt.Printf("\nThere is an issue with your config file\n")
-			os.Exit(1)
+			return configWG, errors.Wrapf(err, "\nThere is an issue with your config file\n", listMissing)
+			//fmt.Printf("\nThere is an issue with your config file\n")
+			//os.Exit(1)
 		}
 	}
 

@@ -1,16 +1,17 @@
 package network
 
 import (
-	"errors"
+	//"errors"
 	"fmt"
 	"io"
-	"log"
-	"os"
+	//"log"
+	//"os"
 	"time"
 
 	"github.com/briandowns/spinner"
 	"github.com/dailymotion/asteroid/config"
 	"github.com/dailymotion/asteroid/internal"
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -23,18 +24,17 @@ func RunCommand(conn *ssh.Client, cmd string) (io.Reader, io.Reader, error){
 
 	sessStdOut, err := sess.StdoutPipe()
 	if err != nil {
-		panic(err)
+		return nil, nil, err
 	}
 
 	sessStderr, err := sess.StderrPipe()
 	if err != nil {
-		fmt.Println("stderr: ", err)
-		os.Exit(1)
+		return nil, nil, err
 	}
 
 	err = sess.Run(cmd)
 	if err != nil {
-		fmt.Printf("\nerror with command: %v\n", err)
+		return nil, nil, err
 	}
 	return sessStdOut, sessStderr, nil
 }
@@ -43,37 +43,36 @@ func ConnectAndRetrieve(IPAddress string, cmd string) (*ssh.Client, error) {
 	//We read the config file to retrieve the connection arguments
 	configWG, err := config.ReadConfigFile()
 	if err != nil {
-		log.Fatal("Error reading config file: ", err)
+		return nil, err
 	}
 
 	// We retrieve the ssh key path
 	sshKeyPath, err := internal.RetrievePubKey(configWG.SSHKeyName)
 	if err != nil {
-		log.Fatal("Error with Scan: ", err)
+		return nil, errors.Wrapf(err, "error retrieving PubKey")
 	}
 
 	key, err := internal.ReadPubKey(sshKeyPath)
 	if err != nil {
-		log.Fatal("Error with readPubKey: ", err)
+		return nil, errors.Wrapf(err, "error reading PubKey")
 	}
 
 	// We're creating the connection to the server
 	conn, err := connectToServer(key, configWG)
 	if err != nil {
-		log.Fatalf("\nError with connection: %v\nAre you connected to the VPN ?\n", err)
+		return nil, errors.Wrapf(err, "Are you connected to the VPN ? ")
 	}
 
 	if cmd == "add" {
 		// We retrieve all the user vpn ip to use them for different checks
 		listPeers, err := RetrieveIPs(conn)
 		if err != nil {
-			fmt.Println("error: ", err)
-			os.Exit(1)
+			return nil, errors.Wrapf(err, "error retrieving VPN IPs")
 		}
 
 		ok := CheckForDouble(listPeers, IPAddress)
 		if ok {
-			return nil, errors.New("IP already exist in the server")
+			return nil, errors.Wrapf(err,"IP already exist in the server")
 		}
 	}
 

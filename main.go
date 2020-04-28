@@ -82,15 +82,13 @@ func main() {
 		// Check if arguments are empty or haven't all necessary requirements
 		err = internal.CheckFlagValid(*peerKeyFlag, *peerCIDRFlag, "add")
 		if err != nil {
-			fmt.Printf("\nError with arguments: %v\n", err)
-			os.Exit(2)
+			log.Fatalf("\nerror with arguments: %v\n", err)
 		}
 
 		// Connect to the server and retrieve the conn object
 		conn, err := network.ConnectAndRetrieve(*peerCIDRFlag, "add")
 		if err != nil {
-			fmt.Println("\n/!\\ error:", err)
-			os.Exit(1)
+			log.Fatalf("\nerror: %v\n", err)
 		}
 
 		// Add new Peer to the server
@@ -102,8 +100,7 @@ func main() {
 			// We retrieve all the peer vpn ip to show the new added peer
 			listPeers, err := network.RetrieveIPs(conn)
 			if err != nil {
-				fmt.Println("error: ", err)
-				os.Exit(1)
+				log.Fatalf("\nerror: %v\n", err)
 			}
 
 			fmt.Printf("\n\nPeers informations\n-------------------\n")
@@ -120,14 +117,12 @@ func main() {
 
 		conn, err := network.ConnectAndRetrieve("", "view")
 		if err != nil {
-			fmt.Println("error:", err)
-			os.Exit(1)
+			log.Fatalf("\nerror: %v\n", err)
 		}
 
 		listPeers, err := network.RetrieveIPs(conn)
 		if err != nil {
-			fmt.Println("error: ", err)
-			os.Exit(1)
+			log.Fatalf("\nerror: %v\n", err)
 		}
 
 		fmt.Printf("\n\nPeers informations\n-------------------\n")
@@ -151,19 +146,16 @@ func main() {
 		}
 		conn, err := network.ConnectAndRetrieve("", "delete")
 		if err != nil {
-			fmt.Println("error:", err)
-			os.Exit(1)
+			log.Fatalf("\nerror: %v\n", err)
 		}
 		_, stdErr := peer.DeletePeer(conn, *peerDeleteKeyFlag)
 		if stdErr != "" {
-			fmt.Printf("stdErr: %v\n", stdErr)
-			os.Exit(1)
+			log.Fatalf("\nstdErr: %v\n", stdErr)
 		} else {
 			fmt.Printf("\nPeer %v deleted !\n", *peerDeleteKeyFlag)
 			listPeers, err := network.RetrieveIPs(conn)
 			if err != nil {
-				fmt.Println("error: ", err)
-				os.Exit(1)
+				log.Fatalf("\nerror: %v\n", err)
 			}
 
 			network.ShowListIPs(listPeers)
