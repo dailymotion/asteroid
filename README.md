@@ -47,3 +47,9 @@ If you need any help with the command and their respective arguments, just use h
 ```
 $ asteroid help / -h
 ``` 
+
+### Configuration
+You just have to copy the file in the config folder into your $HOME with your configuration
+```
+$ cp config/asteroid_example.yaml $HOME/.asteroid.yaml
+```
