@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-
 	"fmt"
 	"log"
 	"os"
@@ -17,7 +16,7 @@ func flagUsage() {
 	fmt.Println("NAME:\n   Asteroid CLI " + emojiPlanet + " - An app to manage peers for Wireguard VPN")
 	fmt.Println("AUTHOR:")
 	fmt.Println("   Ben Cyril")
-    fmt.Printf("USAGE:\n   %s command [OPTIONS] [ARGUMENTS ...]\n", os.Args[0])
+	fmt.Printf("USAGE:\n   %s command [OPTIONS] [ARGUMENTS ...]\n", os.Args[0])
 	//fmt.Println("VERSION:")
 	//fmt.Println("   1.0.0")
 	fmt.Println("COMMANDS:")
@@ -28,7 +27,6 @@ func flagUsage() {
 	fmt.Println("    -address \"string\"    New peer address (to use with add)")
 	fmt.Println("    -key \"string\"        New peer key (to use with add and delete)")
 }
-
 
 func addUsage() {
 	fmt.Printf("\nUSAGE:\n   %s [OPTIONS] [ARGUMENTS ...]\n", "add")
@@ -68,13 +66,13 @@ func main() {
 		addFlag.Usage = addUsage
 		err := addFlag.Parse(os.Args[2:])
 		if err != nil {
-			fmt.Printf("\nError parsing flag: %v\n", err)
+			log.Printf("\nError parsing flag: %v\n", err)
 			os.Exit(1)
 		}
 
 		// Checking if arguments have been given for the command
 		if len(os.Args) <= 5 {
-			fmt.Printf("Missing Arguments\n")
+			log.Printf("Missing Arguments\n")
 			addFlag.Usage()
 			os.Exit(2)
 		}
@@ -92,20 +90,20 @@ func main() {
 		}
 
 		// Add new Peer to the server
-		_, stdErr := peer.AddNewPeer(conn, *peerKeyFlag, *peerCIDRFlag)
-		if stdErr != "" {
-			log.Fatalf("stdErr: %v\n", stdErr)
-		} else {
-			fmt.Println("Peer added !")
-			// We retrieve all the peer vpn ip to show the new added peer
-			listPeers, err := network.RetrieveIPs(conn)
-			if err != nil {
-				log.Fatalf("\nerror: %v\n", err)
-			}
-
-			fmt.Printf("\n\nPeers informations\n-------------------\n")
-			network.ShowListIPs(listPeers)
+		if err := peer.AddNewPeer(conn, *peerKeyFlag, *peerCIDRFlag); err != nil {
+			log.Fatalf("error: %v\n", err)
 		}
+
+		fmt.Println("Peer added !")
+		// We retrieve all the peer vpn ip to show the new added peer
+		listPeers, err := network.RetrieveIPs(conn)
+		if err != nil {
+			fmt.Println("error: ", err)
+			os.Exit(1)
+		}
+
+		fmt.Printf("\n\nPeers informations\n-------------------\n")
+		network.ShowListIPs(listPeers)
 	case "view":
 		flag.Parse()
 		// We alert if arguments are given to the command
@@ -148,18 +146,18 @@ func main() {
 		if err != nil {
 			log.Fatalf("\nerror: %v\n", err)
 		}
-		_, stdErr := peer.DeletePeer(conn, *peerDeleteKeyFlag)
-		if stdErr != "" {
-			log.Fatalf("\nstdErr: %v\n", stdErr)
-		} else {
-			fmt.Printf("\nPeer %v deleted !\n", *peerDeleteKeyFlag)
-			listPeers, err := network.RetrieveIPs(conn)
-			if err != nil {
-				log.Fatalf("\nerror: %v\n", err)
-			}
-
-			network.ShowListIPs(listPeers)
+		if err = peer.DeletePeer(conn, *peerDeleteKeyFlag); err != nil {
+			log.Fatalf("error: %v\n", err)
 		}
+
+		fmt.Printf("\nPeer %v deleted !\n", *peerDeleteKeyFlag)
+		listPeers, err := network.RetrieveIPs(conn)
+		if err != nil {
+			log.Fatalf("error: %v\n", err)
+		}
+
+		network.ShowListIPs(listPeers)
+
 	case "-h", "--help":
 		flag.Usage()
 	default:

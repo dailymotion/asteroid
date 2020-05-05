@@ -1,11 +1,7 @@
 package network
 
 import (
-	//"errors"
-	"fmt"
-	"io"
-	//"log"
-	//"os"
+	"log"
 	"time"
 
 	"github.com/briandowns/spinner"
@@ -15,7 +11,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-func RunCommand(conn *ssh.Client, cmd string) (io.Reader, io.Reader, error){
+func RunCommand(conn *ssh.Client, cmd string) (string, error) {
 	sess, err := conn.NewSession()
 	if err != nil {
 		panic(err)
@@ -24,55 +20,68 @@ func RunCommand(conn *ssh.Client, cmd string) (io.Reader, io.Reader, error){
 
 	sessStdOut, err := sess.StdoutPipe()
 	if err != nil {
-		return nil, nil, err
+		return "", errors.Wrap(err, "failed to connect stdout pipi")
 	}
 
 	sessStderr, err := sess.StderrPipe()
 	if err != nil {
-		return nil, nil, err
+		return "", errors.Wrap(err, "failed to connect stderr pipe")
 	}
 
-	err = sess.Run(cmd)
-	if err != nil {
-		return nil, nil, err
+	if err = sess.Run(cmd); err != nil {
+		return "", errors.Wrapf(err, "failed to run the command: %s", cmd)
 	}
-	return sessStdOut, sessStderr, nil
+
+	stringOut, err := readerToString(sessStdOut)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read the stdout")
+	}
+
+	stringErr, err := readerToString(sessStderr)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read the stderr")
+	}
+
+	if len(stringErr) > 0 {
+		return "", errors.Errorf("The command returned with the following error: %s", stringErr)
+	}
+
+	return stringOut, nil
 }
 
 func ConnectAndRetrieve(IPAddress string, cmd string) (*ssh.Client, error) {
 	//We read the config file to retrieve the connection arguments
 	configWG, err := config.ReadConfigFile()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to read the config file")
 	}
 
 	// We retrieve the ssh key path
 	sshKeyPath, err := internal.RetrievePubKey(configWG.SSHKeyName)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error retrieving PubKey")
+		return nil, errors.Wrap(err, "failed to retrieve the public key")
 	}
 
 	key, err := internal.ReadPubKey(sshKeyPath)
 	if err != nil {
-		return nil, errors.Wrapf(err, "error reading PubKey")
+		return nil, errors.Wrap(err, "failed to read the public key")
 	}
 
 	// We're creating the connection to the server
 	conn, err := connectToServer(key, configWG)
 	if err != nil {
-		return nil, errors.Wrapf(err, "Are you connected to the VPN ? ")
+		return nil, errors.Wrap(err, "Failed to connect to the server. Are you connected to the VPN ?")
 	}
 
 	if cmd == "add" {
 		// We retrieve all the user vpn ip to use them for different checks
 		listPeers, err := RetrieveIPs(conn)
 		if err != nil {
-			return nil, errors.Wrapf(err, "error retrieving VPN IPs")
+			return nil, errors.Wrap(err, "failed to retrieve VPN IPs")
 		}
 
-		ok := CheckForDouble(listPeers, IPAddress)
-		if ok {
-			return nil, errors.Wrapf(err,"IP already exist in the server")
+		if ok := CheckForDouble(listPeers, IPAddress); ok {
+			return nil, errors.New("IP already exists in the server")
 		}
 	}
 
@@ -82,7 +91,7 @@ func ConnectAndRetrieve(IPAddress string, cmd string) (*ssh.Client, error) {
 func connectToServer(sshKey ssh.AuthMethod, config config.Config) (*ssh.Client, error) {
 	// Build our new spinner (connection animation)
 	s := spinner.New(spinner.CharSets[11], 100*time.Millisecond)
-	fmt.Printf("Connecting to server ")
+	log.Printf("Connecting to server...")
 	s.Start()
 
 	// SSH config
@@ -98,10 +107,11 @@ func connectToServer(sshKey ssh.AuthMethod, config config.Config) (*ssh.Client, 
 		sshConfig.HostKeyCallback = ssh.InsecureIgnoreHostKey()
 	}
 
-	connection, err := ssh.Dial("tcp", config.WireguardIP +  ":" + config.SSHPort, &sshConfig)
+	connection, err := ssh.Dial("tcp", config.WireguardIP+":"+config.SSHPort, &sshConfig)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to ssh dial %s", config.WireguardIP+":"+config.SSHPort)
 	}
+
 	s.Stop()
 	return connection, nil
 }
