@@ -2,6 +2,7 @@ package network
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"os"
 	"regexp"
@@ -86,7 +87,8 @@ func RetrieveIPs(conn *ssh.Client) ([]map[string]string, error) {
 			//log.Fatalf("\nError with compiling Regex: %v\n", err)
 		}
 		// regex for the address
-		findPeerKey, err := regexp.Compile(`peer:\s(\W.+|\w.+)`)
+		//findPeerKey, err := regexp.Compile(`peer:\s(\W.+|\w.+)`)
+		findPeerKey, err := regexp.Compile(`(peer:|public\ key:)\s(\W.+|\w.+)`)
 		if err != nil {
 			return listPeers, errors.Wrapf(err, "Error compiling Regex to find peer key\n")
 			//log.Fatalf("\nError with compiling Regex: %v\n", err)
@@ -97,11 +99,12 @@ func RetrieveIPs(conn *ssh.Client) ([]map[string]string, error) {
 
 		if len(regex2) > 0 || len(regex) > 0 {
 			if len(regex2) > 0 {
-				key = regex2[1]
+				fmt.Println(regex2[2])
+				key = regex2[2]
 			}
 			if len(regex) > 0 {
 				for _, v := range regex {
-					if strings.Contains(v, "10.0") {
+					if strings.Contains(v, "10.0") || strings.Contains(v, "172.16"){
 						peerIPs[key] = v
 						key = ""
 					}
