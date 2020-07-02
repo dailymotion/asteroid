@@ -16,9 +16,14 @@ import (
 var (
 	// regex for the ip
 	regexFindIP = regexp.MustCompile(`(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`)
-
 	// regex for the address
-	findPeerKey = regexp.MustCompile(`peer:\s(\W.+|\w.+)`)
+	findPeerKey = regexp.MustCompile(`(peer:|public\ key:)\s(\W.+|\w.+)`)
+	// 10.0.0.0
+	cidrTwentyfourBit = "10.0"
+	// 172.16.0.0
+	cidrTwentyBit = "172.16"
+	// 192.168.0.0
+	cidrSixteenBit = "192.168"
 )
 
 func ShowListIPs(listPeers []map[string]string) {
@@ -84,19 +89,28 @@ func RetrieveIPs(conn *ssh.Client) ([]map[string]string, error) {
 		ipAddress := regexFindIP.FindStringSubmatch(line)
 		peerKey := findPeerKey.FindStringSubmatch(line)
 
+		//fmt.Println(line)
+
 		if len(peerKey) > 0 {
-			key = peerKey[1]
+			if peerKey[1] == "public key:" {
+				//TODO to mention that this key belongs to the server itself
+			} else {
+				key = peerKey[2]
+			}
 		}
+
 		if len(ipAddress) > 0 {
 			for _, v := range ipAddress {
-				if strings.Contains(v, "10.0") {
+				if strings.Contains(v, "10.0") || strings.Contains(v, "172.16") || strings.Contains(v, "192.168"){
 					peerIPs[key] = v
 					key = ""
 				}
 			}
 		}
 
-		listPeers = append(listPeers, peerIPs)
+		if len(peerIPs) > 0 {
+			listPeers = append(listPeers, peerIPs)
+		}
 	}
 
 	internal.SortedListPeer(listPeers)
