@@ -2,7 +2,6 @@ package internal
 
 import (
 	"bytes"
-	"errors"
 	"html"
 	"io/ioutil"
 	"net"
@@ -11,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -21,8 +21,8 @@ func SortedListPeer(listPeer []map[string]string) {
 
 	for _, v := range listPeer {
 		for y, z := range v {
-			realIPs =  append(realIPs, net.ParseIP(z))
-			realKeys =  append(realKeys, y)
+			realIPs = append(realIPs, net.ParseIP(z))
+			realKeys = append(realKeys, y)
 		}
 	}
 
@@ -43,7 +43,7 @@ func RetrievePubKey(sshKey string) (string, error) {
 
 	usr, err := user.Current()
 	if err != nil {
-		return "", err
+		return "", errors.Wrap(err, "failed to retrieve the current user")
 	}
 	keyName = usr.HomeDir + "/.ssh/" + sshKey
 
@@ -53,30 +53,36 @@ func RetrievePubKey(sshKey string) (string, error) {
 func ReadPubKey(sshKeyPath string) (ssh.AuthMethod, error) {
 	buffer, err := ioutil.ReadFile(sshKeyPath)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to read the public key file")
 	}
 
 	key, err := ssh.ParsePrivateKey(buffer)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to parse the private key")
 	}
 	return ssh.PublicKeys(key), nil
 }
 
 func CheckFlagValid(key string, address string, cmd string) error {
-	if cmd == "add" {
+	switch cmd {
+	case "add":
 		if key == "" {
 			return errors.New("key is empty")
-		} else if address == "" {
+		}
+		if address == "" {
 			return errors.New("address is empty")
-		} else if strings.Contains(address, "10.0.0") && !strings.Contains(address, "/32") {
+		}
+		if strings.Contains(address, "10.0.0") && !strings.Contains(address, "/32") {
 			return errors.New("You forgot the Netmask in -address\nShould be: 10.0.0.x/xx")
 		}
-	} else if cmd == "delete" {
+	case "delete":
 		if key == "" {
 			return errors.New("key is empty")
 		}
+	default:
+		return errors.Errorf("unexpected command: %s", cmd)
 	}
+
 	return nil
 }
 
