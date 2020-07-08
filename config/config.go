@@ -14,11 +14,11 @@ import (
 const FILENAME = ".asteroid.yaml"
 
 type Config struct {
-	SSHKeyName	string `yaml:"ssh_key_name"`
+	SSHKeyName  string `yaml:"ssh_key_name"`
 	WireguardIP string `yaml:"wireguard_ip"`
-	SSHPort		string `yaml:"ssh_port"`
-	Username	string `yaml:"username"`
-	HostKey		bool   `yaml:"verification_host_key"`
+	SSHPort     string `yaml:"ssh_port"`
+	Username    string `yaml:"username"`
+	HostKey     bool   `yaml:"verification_host_key"`
 }
 
 func isStructNil(config Config) ([]string, bool) {
@@ -48,7 +48,7 @@ func ReadConfigFile() (Config, error) {
 
 	usr, err := user.Current()
 	if err != nil {
-		return configWG, err
+		return configWG, errors.Wrap(err, "failed to retrieve the current user")
 	}
 	path := usr.HomeDir + "/" + FILENAME
 
@@ -58,32 +58,30 @@ func ReadConfigFile() (Config, error) {
 	if os.IsNotExist(err) {
 		return configWG, errors.Wrap(err, "couldn't create file")
 	}
+	if err != nil {
+		return configWG, errors.Wrap(err, "failed to get file info")
+	}
 
 	// reading file
 	data, err := ioutil.ReadFile(path)
 	if err != nil {
-		return configWG, errors.Wrap(err, "couldn't read file")
+		return configWG, errors.Wrap(err, "failed to read the file")
 	}
 
 	err = yaml.Unmarshal(data, &configWG)
 	if err != nil {
-		return configWG, errors.Wrap(err, "error unmarshal data")
+		return configWG, errors.Wrap(err, "failed to unmarshall the data from the file")
 	}
 
 	listMissing, isNil := isStructNil(configWG)
 	if isNil {
-		if len(listMissing) == 1 {
-			return configWG, errors.Wrapf(err, "\nThe field %v in your config file is missing\n", listMissing)
-			//fmt.Printf("\nThe field %v in your config file is missing\n", listMissing)
-			//os.Exit(1)
-		} else  if len(listMissing) >= 2 {
-			return configWG, errors.Wrapf(err, "\nThe fields %v in your config file are missing\n", listMissing)
-			//fmt.Printf("\nThe fields %v in your config file are missing\n", listMissing)
-			//os.Exit(1)
-		} else {
-			return configWG, errors.Wrapf(err, "\nThere is an issue with your config file\n", listMissing)
-			//fmt.Printf("\nThere is an issue with your config file\n")
-			//os.Exit(1)
+		switch len(listMissing) {
+		case 0:
+			return configWG, errors.New("There is an issue with your config file")
+		case 1:
+			return configWG, errors.Errorf("The field %s in your config file is missing", listMissing[0])
+		default:
+			return configWG, errors.Errorf("The fields %v in your config file are missing\n", listMissing)
 		}
 	}
 

@@ -13,6 +13,19 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+var (
+	// regex for the ip
+	regexFindIP = regexp.MustCompile(`(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`)
+	// regex for the address
+	findPeerKey = regexp.MustCompile(`(peer:|public\ key:)\s(\W.+|\w.+)`)
+	// 10.0.0.0
+	cidrTwentyfourBit = "10.0"
+	// 172.16.0.0
+	cidrTwentyBit = "172.16"
+	// 192.168.0.0
+	cidrSixteenBit = "192.168"
+)
+
 func ShowListIPs(listPeers []map[string]string) {
 	var data [][]string
 	var row []string
@@ -47,7 +60,7 @@ func CheckForDouble(listPeer []map[string]string, IPAddress string) bool {
 	return false
 }
 
-func ReaderToString(cmdReader io.Reader) (string, error) {
+func readerToString(cmdReader io.Reader) (string, error) {
 	buf := new(bytes.Buffer)
 	_, err := buf.ReadFrom(cmdReader)
 	if err != nil {
@@ -64,47 +77,33 @@ func RetrieveIPs(conn *ssh.Client) ([]map[string]string, error) {
 
 	// command to show all peers created on the server
 	command := "sudo wg"
-	stdOut, stdErr, err := RunCommand(conn, command)
+	stdOut, err := RunCommand(conn, command)
 	if err != nil {
-		return listPeers, errors.Wrapf(err, "Error with runCommand.\nStdErr: %v", stdErr)
-		//log.Fatalf("\nError with runCommand: %v\nStdErr: %v", err, stdErr)
-	}
-
-	s, err := ReaderToString(stdOut)
-	if err != nil {
-		return nil, err
+		return nil, errors.Wrapf(err, "failed to run the command: %s", command)
 	}
 
 	// regex to retrieve only the lines with the IP and the peer address
-	for _, line := range strings.Split(strings.TrimSuffix(s, "\n"), "\n") {
+	for _, line := range strings.Split(strings.TrimSuffix(stdOut, "\n"), "\n") {
 		peerIPs := make(map[string]string)
 
-		// regex for the ip
-		regexFindIP, err := regexp.Compile(`(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`)
-		if err != nil {
-			return listPeers, errors.Wrapf(err, "Error compiling Regex to find IPs\n")
-			//log.Fatalf("\nError with compiling Regex: %v\n", err)
-		}
-		// regex for the address
-		findPeerKey, err := regexp.Compile(`peer:\s(\W.+|\w.+)`)
-		if err != nil {
-			return listPeers, errors.Wrapf(err, "Error compiling Regex to find peer key\n")
-			//log.Fatalf("\nError with compiling Regex: %v\n", err)
-		}
+		ipAddress := regexFindIP.FindStringSubmatch(line)
+		peerKey := findPeerKey.FindStringSubmatch(line)
 
-		regex := regexFindIP.FindStringSubmatch(line)
-		regex2 := findPeerKey.FindStringSubmatch(line)
+		//fmt.Println(line)
 
-		if len(regex2) > 0 || len(regex) > 0 {
-			if len(regex2) > 0 {
-				key = regex2[1]
+		if len(peerKey) > 0 {
+			if peerKey[1] == "public key:" {
+				//TODO to mention that this key belongs to the server itself
+			} else {
+				key = peerKey[2]
 			}
-			if len(regex) > 0 {
-				for _, v := range regex {
-					if strings.Contains(v, "10.0") {
-						peerIPs[key] = v
-						key = ""
-					}
+		}
+
+		if len(ipAddress) > 0 {
+			for _, v := range ipAddress {
+				if strings.Contains(v, "10.0") || strings.Contains(v, "172.16") || strings.Contains(v, "192.168"){
+					peerIPs[key] = v
+					key = ""
 				}
 			}
 		}
@@ -113,6 +112,7 @@ func RetrieveIPs(conn *ssh.Client) ([]map[string]string, error) {
 			listPeers = append(listPeers, peerIPs)
 		}
 	}
+
 	internal.SortedListPeer(listPeers)
 	return listPeers, nil
 }
