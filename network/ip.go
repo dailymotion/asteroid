@@ -2,13 +2,12 @@ package network
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"os"
 	"regexp"
 	"strings"
 
-	"github.com/dailymotion/asteroid/internal"
+	//"github.com/dailymotion/asteroid/internal"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
@@ -89,13 +88,12 @@ func RetrieveIPs(conn *ssh.Client) ([]map[string]string, error) {
 		ipAddress := regexFindIP.FindStringSubmatch(line)
 		peerKey := findPeerKey.FindStringSubmatch(line)
 
-		if len(regex2) > 0 || len(regex) > 0 {
-			if len(regex2) > 0 {
-				fmt.Println(regex2[2])
-				key = regex2[2]
+		if len(peerKey) > 0 || len(peerKey) > 0 {
+			if len(peerKey) > 0 {
+				key = peerKey[2]
 			}
-			if len(regex) > 0 {
-				for _, v := range regex {
+			if len(ipAddress) > 0 {
+				for _, v := range ipAddress {
 					if strings.Contains(v, "10.0") || strings.Contains(v, "172.16") {
 						peerIPs[key] = v
 						key = ""
@@ -125,6 +123,7 @@ func RetrieveIPs(conn *ssh.Client) ([]map[string]string, error) {
 		}
 	}
 
-	internal.SortedListPeer(listPeers)
+	// Sort function issue to fix: key/ip mismatch
+	//internal.SortedListPeer(listPeers)
 	return listPeers, nil
 }
