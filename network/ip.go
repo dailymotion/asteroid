@@ -7,7 +7,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/dailymotion/asteroid/internal"
+	//"github.com/dailymotion/asteroid/internal"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
@@ -85,12 +85,22 @@ func RetrieveIPs(conn *ssh.Client) ([]map[string]string, error) {
 	// regex to retrieve only the lines with the IP and the peer address
 	for _, line := range strings.Split(strings.TrimSuffix(stdOut, "\n"), "\n") {
 		peerIPs := make(map[string]string)
-
 		ipAddress := regexFindIP.FindStringSubmatch(line)
 		peerKey := findPeerKey.FindStringSubmatch(line)
 
-		//fmt.Println(line)
-
+		if len(peerKey) > 0 || len(peerKey) > 0 {
+			if len(peerKey) > 0 {
+				key = peerKey[2]
+			}
+			if len(ipAddress) > 0 {
+				for _, v := range ipAddress {
+					if strings.Contains(v, "10.0") || strings.Contains(v, "172.16") {
+						peerIPs[key] = v
+						key = ""
+					}
+				}
+			}
+		}
 		if len(peerKey) > 0 {
 			if peerKey[1] == "public key:" {
 				//TODO to mention that this key belongs to the server itself
@@ -113,6 +123,7 @@ func RetrieveIPs(conn *ssh.Client) ([]map[string]string, error) {
 		}
 	}
 
-	internal.SortedListPeer(listPeers)
+	// Sort function issue to fix: key/ip mismatch
+	//internal.SortedListPeer(listPeers)
 	return listPeers, nil
 }
