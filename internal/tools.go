@@ -2,14 +2,18 @@ package internal
 
 import (
 	"bytes"
+	"fmt"
 	"html"
 	"io/ioutil"
+	"log"
 	"net"
+	"os"
 	"os/user"
 	"sort"
 	"strconv"
 	"strings"
 
+	"github.com/dailymotion/asteroid/config"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 )
@@ -102,4 +106,79 @@ func CreateEmoji() string {
 		}
 	}
 	return emojiFinal
+}
+
+func showConfig(wireguardConfig string) {
+	fmt.Println(wireguardConfig)
+}
+
+func generateWGConfigFile(peerKey *string, peerCIDR *string, conf *config.Config) (string, error) {
+	privateKey := peerKey
+	address := peerCIDR
+	DNS := "9.9.9.9"
+	endpoint := conf.WireguardIP
+	allowedIPs := "0.0.0.0/0"
+
+	wireguardClientConfig := fmt.Sprintf(`[Interface]
+PrivateKey = %v
+Address = %v
+DNS = %v
+
+[Peer]
+PubblicKey = TODO
+AllowedIPs = %v
+EndPoint = %v
+`, *privateKey, *address, DNS, allowedIPs, endpoint)
+
+	return wireguardClientConfig, nil
+}
+
+func writeWGConfToFile(wireguardConf string, conf *config.Config) error {
+	confToByte := []byte(wireguardConf)
+
+	err := ioutil.WriteFile(conf.ClientConfigFile, confToByte, 0644)
+	if err != nil {
+		return err
+	}
+
+	f, err := os.Create(conf.ClientConfigFile)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	_, err = f.WriteString(wireguardConf)
+	if err != nil {
+		return err
+	}
+
+	log.Printf(
+		"The wireguard config for the client has been created in this folder with the name: %v\n",
+		conf.ClientConfigFile)
+
+	return nil
+}
+
+func RetrieveWGConfig(generateFileFlag bool, generateOutputFlag bool, peerKeyFlag string, peerCIDRFlag string) error {
+	conf, err  := config.ReadConfigFile()
+	if err != nil {
+		return err
+	}
+
+	wireguardConf, err := generateWGConfigFile(&peerKeyFlag, &peerCIDRFlag, &conf)
+	if err != nil {
+		return err
+	}
+
+	if generateFileFlag {
+		err := writeWGConfToFile(wireguardConf, &conf)
+		if err != nil {
+			return err
+		}
+	}
+
+	if generateOutputFlag {
+		showConfig(wireguardConf)
+	}
+	return nil
 }

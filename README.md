@@ -6,6 +6,7 @@ It supports :
 - Viewing the configuration to check peers/IP relation 
 - Adding a new peer
 - Removing a peer
+- Generating Client config file
 
 ## Use cases
 
@@ -40,6 +41,17 @@ If you need for any reasons to remove a peer from the server, a simple way to do
 $ asteroid delete -key "eXaMPL3Ave8q+kmNVmiw4KdKiXc//M0EGOY6K9C11nw="
  
   Peer: eXaMPL3Ave8q+kmNVmiw4KdKiXc//M0EGOY6K9C11nw= has been deleted !
+``` 
+
+### Generating client wg0.conf config
+If you need, for the peer added to generate its Wireguard config, you can do it with the flag `-generateFile`  
+It's possible to change it's name via the asteroid.yaml config file
+
+```
+$  asteroid add -key "eXaMPL3Ave8q+kmNVmiw4KdKiXc//M0EGOY6K9C11nw=" -address "172.16.0.x/xx" -generateFile
+ 
+  Peer: eXaMPL3Ave8q+kmNVmiw4KdKiXc//M0EGOY6K9C11nw= has been deleted !
+  The wireguard config for the client has been created with the name: wg0.conf
 ``` 
 
 ### Help

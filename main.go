@@ -24,8 +24,10 @@ func flagUsage() {
 	fmt.Println("   add      Add a new peer on the VPN")
 	fmt.Println("   delete   Delete a peer on the VPN")
 	fmt.Println("OPTIONS:")
-	fmt.Println("    -address \"string\"    New peer address (to use with add)")
-	fmt.Println("    -key \"string\"        New peer key (to use with add and delete)")
+	fmt.Println("    -address \"string\"   New peer address (to use with add)")
+	fmt.Println("    -key \"string\"       New peer key (to use with add and delete)")
+	fmt.Println("    -generateFile       Generate a file with all the client configurations")
+	fmt.Println("    -generateStdout     Generate an output with all the client configurations")
 }
 
 func addUsage() {
@@ -50,6 +52,8 @@ func main() {
 	peerDeleteKeyFlag := deleteFlag.String("key", "", "Peer key to delete")
 	peerKeyFlag := addFlag.String("key", "", "New peer key")
 	peerCIDRFlag := addFlag.String("address", "", "New peer address")
+	generateFile := addFlag.Bool("generateFile", false, "Generate a config file")
+	generateOutput := addFlag.Bool("generateStdout", false, "Generate a config output")
 	// We change the output of Flag Usage to better show what's the app doing
 	flag.Usage = flagUsage
 
@@ -78,32 +82,39 @@ func main() {
 		}
 
 		// Check if arguments are empty or haven't all necessary requirements
-		err = internal.CheckFlagValid(*peerKeyFlag, *peerCIDRFlag, "add")
-		if err != nil {
-			log.Fatalf("\nerror with arguments: %v\n", err)
-		}
+		//err = internal.CheckFlagValid(*peerKeyFlag, *peerCIDRFlag, "add")
+		//if err != nil {
+		//	log.Fatalf("\nerror with arguments: %v\n", err)
+		//}
 
 		// Connect to the server and retrieve the conn object
-		conn, err := network.ConnectAndRetrieve(*peerCIDRFlag, "add")
-		if err != nil {
-			log.Fatalf("\nerror: %v\n", err)
-		}
+		//conn, err := network.ConnectAndRetrieve(*peerCIDRFlag, "add")
+		//if err != nil {
+		//	log.Fatalf("\nerror: %v\n", err)
+		//}
 
 		// Add new Peer to the server
-		if err := peer.AddNewPeer(conn, *peerKeyFlag, *peerCIDRFlag); err != nil {
-			log.Fatalf("error: %v\n", err)
-		}
+		//if err := peer.AddNewPeer(conn, *peerKeyFlag, *peerCIDRFlag); err != nil {
+		//	log.Fatalf("error: %v\n", err)
+		//}
 
 		fmt.Println("Peer added !")
 		// We retrieve all the peer vpn ip to show the new added peer
-		listPeers, err := network.RetrieveIPs(conn)
-		if err != nil {
-			fmt.Println("error: ", err)
-			os.Exit(1)
-		}
+		//listPeers, err := network.RetrieveIPs(conn)
+		//if err != nil {
+		//	fmt.Println("error: ", err)
+		//	os.Exit(1)
+		//}
 
-		fmt.Printf("\n\nPeers informations\n-------------------\n")
-		network.ShowListIPs(listPeers)
+		//fmt.Printf("\n\nPeers informations\n-------------------\n")
+		//network.ShowListIPs(listPeers)
+		fmt.Println("generateOutput: ", *generateOutput)
+		if *generateFile || *generateOutput {
+			err := internal.RetrieveWGConfig(*generateFile, *generateOutput, *peerKeyFlag, *peerCIDRFlag)
+			if err != nil {
+				log.Println(err)
+			}
+		}
 	case "view":
 		flag.Parse()
 		// We alert if arguments are given to the command
