@@ -57,7 +57,7 @@ func HandleFlags(args []string) (*string,*string,*string,*bool,*bool){
 		flag.Usage()
 		os.Exit(1)
 	}
-	
+
 	if args[1] == "add" {
 		addFlag.Usage = addUsage
 		err := addFlag.Parse(os.Args[2:])
