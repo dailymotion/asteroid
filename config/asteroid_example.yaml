@@ -1,5 +1,0 @@
-ssh_key_name: wireguard_ssh_key.pem
-username: ssh_user
-wireguard_ip: wireguard_server_ip
-ssh_port: port
-client_config_file_name: wg0.conf

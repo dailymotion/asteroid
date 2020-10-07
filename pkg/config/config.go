@@ -14,12 +14,23 @@ import (
 const FILENAME = ".asteroid.yaml"
 
 type Config struct {
-	SSHKeyName  		string `yaml:"ssh_key_name"`
-	WireguardIP 		string `yaml:"wireguard_ip"`
-	SSHPort     		string `yaml:"ssh_port"`
-	Username    		string `yaml:"username"`
-	HostKey     		bool   `yaml:"verification_host_key"`
-	ClientConfigFile     string   `yaml:"client_config_file_name"`
+	WG 			Wireguard 	`yaml:"wireguard"`
+	ClientConfig ClientConfig `yaml:"client_config_file"`
+}
+
+type Wireguard struct {
+	SSHKeyName  	string `yaml:"ssh_key_name"`
+	WireguardIP 	string `yaml:"ip"`
+	SSHPort     	string `yaml:"ssh_port"`
+	Username    	string `yaml:"username"`
+	HostKey     	bool   `yaml:"verification_host_key"`
+	WGPort			string `yaml:"wg_port"`
+}
+
+type ClientConfig struct {
+	Name     	string `yaml:"name"`
+	DNS     	string `yaml:"dns"`
+	AllowedIPs  string `yaml:"allowed_ips"`
 }
 
 func isStructNil(config Config) ([]string, bool) {

@@ -1,0 +1,73 @@
+package tools
+
+import (
+	"flag"
+	"fmt"
+	"log"
+	"os"
+)
+
+func flagUsage() {
+	emojiPlanet := CreateEmoji()
+	fmt.Println("NAME:\n   Asteroid CLI " + emojiPlanet + " - An app to manage peers for Wireguard VPN")
+	fmt.Println("AUTHOR:")
+	fmt.Println("   Ben Cyril")
+	fmt.Printf("USAGE:\n   %s command [OPTIONS] [ARGUMENTS ...]\n", os.Args[0])
+	//fmt.Println("VERSION:")
+	//fmt.Println("   1.0.0")
+	fmt.Println("COMMANDS:")
+	fmt.Println("   view     View the peers present on the VPN")
+	fmt.Println("   add      Add a new peer on the VPN")
+	fmt.Println("   delete   Delete a peer on the VPN")
+	fmt.Println("OPTIONS:")
+	fmt.Println("   -address \"string\"   New peer address (to use with add)")
+	fmt.Println("   -key \"string\"       New peer key (to use with add and delete)")
+	fmt.Println("   -generateFile       Generate a file with all the client configurations (to use with add)")
+	fmt.Println("   -generateStdout     Generate an output with all the client configurations (to use with add)")
+}
+
+func addUsage() {
+	fmt.Printf("USAGE:\n   %s [OPTIONS] [ARGUMENTS ...]\n", "add")
+	fmt.Println("OPTIONS:")
+	fmt.Println("   -address \"string\"    New peer address (to use with add)")
+	fmt.Println("   -key \"string\"        New peer key (to use with add and delete)")
+
+}
+
+func deleteUsage() {
+	fmt.Printf("USAGE:\n   %s [OPTIONS] [ARGUMENTS ...]\n", "delete")
+	fmt.Println("OPTIONS:")
+	fmt.Println("   -key \"string\"        Peer key to delete")
+}
+
+func HandleFlags(args []string) (*string,*string,*string,*bool,*bool){
+	addFlag := flag.NewFlagSet("add", flag.ExitOnError)
+	deleteFlag := flag.NewFlagSet("delete", flag.ExitOnError)
+	// Subcommands
+	peerDeleteKeyFlag := deleteFlag.String("key", "", "Peer key to delete")
+	peerKeyFlag := addFlag.String("key", "", "New peer key")
+	peerCIDRFlag := addFlag.String("address", "", "New peer address")
+	generateFile := addFlag.Bool("generateFile", false, "Generate a config file")
+	generateOutput := addFlag.Bool("generateStdout", false, "Generate a config output")
+	// We change the output of Flag Usage to better show what's the app doing
+	flag.Usage = flagUsage
+
+
+	fmt.Println("ARGS: ", args)
+	if args[1] == "add" {
+		addFlag.Usage = addUsage
+		err := addFlag.Parse(os.Args[2:])
+		if err != nil {
+			log.Printf("\nError parsing flag: %v\n", err)
+			os.Exit(1)
+		}
+	} else if args[1] == "delete" {
+		deleteFlag.Usage = deleteUsage
+		err := deleteFlag.Parse(os.Args[2:])
+		if err != nil {
+			log.Fatal("Issue with Parse Flag: ", err)
+		}
+	}
+
+	return peerDeleteKeyFlag, peerKeyFlag, peerCIDRFlag, generateFile, generateOutput
+}

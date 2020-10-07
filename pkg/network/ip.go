@@ -7,7 +7,6 @@ import (
 	"regexp"
 	"strings"
 
-	//"github.com/dailymotion/asteroid/internal"
 	"github.com/olekukonko/tablewriter"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
@@ -19,7 +18,7 @@ var (
 	// regex for the address
 	findPeerKey = regexp.MustCompile(`(peer:|public\ key:)\s(\W.+|\w.+)`)
 	// 10.0.0.0
-	cidrTwentyfourBit = "10.0"
+	cidrTwentyfourBit = "10."
 	// 172.16.0.0
 	cidrTwentyBit = "172.16"
 	// 192.168.0.0
@@ -71,15 +70,16 @@ func readerToString(cmdReader io.Reader) (string, error) {
 	return s, nil
 }
 
-func RetrieveIPs(conn *ssh.Client) ([]map[string]string, error) {
+func RetrieveIPs(conn *ssh.Client) ([]map[string]string, string, error) {
 	var listPeers []map[string]string
+	var serverPubKey string
 	key := ""
 
 	// command to show all peers created on the server
 	command := "sudo wg"
 	stdOut, err := RunCommand(conn, command)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to run the command: %s", command)
+		return nil, serverPubKey, errors.Wrapf(err, "failed to run the command: %s", command)
 	}
 
 	// regex to retrieve only the lines with the IP and the peer address
@@ -94,7 +94,7 @@ func RetrieveIPs(conn *ssh.Client) ([]map[string]string, error) {
 			}
 			if len(ipAddress) > 0 {
 				for _, v := range ipAddress {
-					if strings.Contains(v, "10.0") || strings.Contains(v, "172.16") {
+					if strings.Contains(v, cidrTwentyfourBit) || strings.Contains(v, cidrTwentyBit) || strings.Contains(v, cidrTwentyBit) {
 						peerIPs[key] = v
 						key = ""
 					}
@@ -104,6 +104,7 @@ func RetrieveIPs(conn *ssh.Client) ([]map[string]string, error) {
 		if len(peerKey) > 0 {
 			if peerKey[1] == "public key:" {
 				//TODO to mention that this key belongs to the server itself
+				serverPubKey = peerKey[2]
 			} else {
 				key = peerKey[2]
 			}
@@ -125,5 +126,5 @@ func RetrieveIPs(conn *ssh.Client) ([]map[string]string, error) {
 
 	// Sort function issue to fix: key/ip mismatch
 	//internal.SortedListPeer(listPeers)
-	return listPeers, nil
+	return listPeers, serverPubKey, nil
 }
