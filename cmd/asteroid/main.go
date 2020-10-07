@@ -14,12 +14,6 @@ import (
 func main() {
 	var err error
 
-	// Verify that flags has been provided
-	if len(os.Args) < 2 {
-		flag.Usage()
-		os.Exit(1)
-	}
-
 	// Init wireguard to keep all the value in one place
 	wireguard, err := tools.InitWG(os.Args)
 	if err != nil {

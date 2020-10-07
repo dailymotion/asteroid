@@ -52,8 +52,12 @@ func HandleFlags(args []string) (*string,*string,*string,*bool,*bool){
 	// We change the output of Flag Usage to better show what's the app doing
 	flag.Usage = flagUsage
 
-
-	fmt.Println("ARGS: ", args)
+	// Verify that flags has been provided
+	if len(os.Args) < 2 {
+		flag.Usage()
+		os.Exit(1)
+	}
+	
 	if args[1] == "add" {
 		addFlag.Usage = addUsage
 		err := addFlag.Parse(os.Args[2:])

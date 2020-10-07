@@ -23,7 +23,7 @@ type WGConfig struct {
 	ServerPubKey      string
 }
 
-// Init a Wireguard object to keep all related variabble in one place
+// Init a Wireguard object to keep all related variables in one place
 func InitWG(args []string ) (WGConfig, error) {
 	conf, err := config.ReadConfigFile()
 	if err != nil {
