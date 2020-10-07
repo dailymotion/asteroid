@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	// regex for the ip
+	// regex to find the ip
 	regexFindIP = regexp.MustCompile(`(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}`)
-	// regex for the address
+	// regex to find the server address
 	findPeerKey = regexp.MustCompile(`(peer:|public\ key:)\s(\W.+|\w.+)`)
 	// 10.0.0.0
 	cidrTwentyfourBit = "10."
@@ -25,6 +25,7 @@ var (
 	cidrSixteenBit = "192.168"
 )
 
+// ShowListIPs create a pretty array to show the peer IPs and their respective keys
 func ShowListIPs(listPeers []map[string]string) {
 	var data [][]string
 	var row []string
@@ -46,6 +47,7 @@ func ShowListIPs(listPeers []map[string]string) {
 	table.Render()
 }
 
+// CheckForDouble _
 func CheckForDouble(listPeer []map[string]string, IPAddress string) bool {
 	cleanIP := IPAddress[:len(IPAddress)-3]
 
@@ -70,6 +72,7 @@ func readerToString(cmdReader io.Reader) (string, error) {
 	return s, nil
 }
 
+// RetrieveIPs run the command to show all WG IPs setup on the server
 func RetrieveIPs(conn *ssh.Client) ([]map[string]string, string, error) {
 	var listPeers []map[string]string
 	var serverPubKey string

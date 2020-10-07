@@ -15,7 +15,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// Sort to show list with asc order
+// SortedListPeer Sorts to show list with asc order
 func SortedListPeer(listPeer []map[string]string) {
 	realIPs := make([]net.IP, 0, len(listPeer))
 	realKeys := make([]string, 0, len(listPeer))
@@ -39,7 +39,7 @@ func SortedListPeer(listPeer []map[string]string) {
 
 }
 
-// Going to the .ssh folder in user home to retrieve the ssh key to connect to Wireguard server
+// RetrievePubKey Going to the .ssh folder in user home to retrieve the ssh key to connect to Wireguard server
 func RetrievePubKey(sshKey string) (string, error) {
 	var keyName string
 
@@ -52,7 +52,7 @@ func RetrievePubKey(sshKey string) (string, error) {
 	return keyName, nil
 }
 
-// Reading ssh key previously obtained
+// ReadPubKey Reads ssh key previously obtained
 func ReadPubKey(sshKeyPath string) (ssh.AuthMethod, error) {
 	buffer, err := ioutil.ReadFile(sshKeyPath)
 	if err != nil {
@@ -66,7 +66,7 @@ func ReadPubKey(sshKeyPath string) (ssh.AuthMethod, error) {
 	return ssh.PublicKeys(key), nil
 }
 
-// Checking that nothing is missing or that a flag as all the requirements
+// CheckFlagValid Checks that nothing is missing or that a flag as all the requirements
 func CheckFlagValid(wireguard WGConfig, cmd string) error {
 	var key string
 	var address string
@@ -103,6 +103,7 @@ func CheckFlagValid(wireguard WGConfig, cmd string) error {
 	return nil
 }
 
+// CreateEmoji Creates the planet emoji present in the Asteroid help info
 func CreateEmoji() string {
 	var emojiFinal string
 

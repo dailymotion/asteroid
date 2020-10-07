@@ -13,6 +13,7 @@ func showConfig(wireguardConfig string) {
 		"%v\n", wireguardConfig)
 }
 
+// WGConfig Struct with all related info to create peer on WG server
 type WGConfig struct {
 	PeerKey 		  string
 	PeerCIDR 		  string
@@ -23,7 +24,7 @@ type WGConfig struct {
 	ServerPubKey      string
 }
 
-// Init a Wireguard object to keep all related variables in one place
+// InitWG Init a Wireguard object to keep all related variables in one place
 func InitWG(args []string ) (WGConfig, error) {
 	conf, err := config.ReadConfigFile()
 	if err != nil {
@@ -106,7 +107,7 @@ func (wg WGConfig) writeWGConfToFile(wireguardConf string) error {
 	return nil
 }
 
-// Function that will generate, show or write the client config file
+// RetrieveWGConfig Will generate, show or write to a file the client configuration
 func (wg WGConfig) RetrieveWGConfig() error {
 
 	wireguardConf, err := wg.generateWGConfigFile()

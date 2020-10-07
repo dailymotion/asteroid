@@ -11,6 +11,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
+// RunCommand will use the ssh connection to run the bash command on the server
 func RunCommand(conn *ssh.Client, cmd string) (string, error) {
 	sess, err := conn.NewSession()
 	if err != nil {
@@ -49,6 +50,7 @@ func RunCommand(conn *ssh.Client, cmd string) (string, error) {
 	return stringOut, nil
 }
 
+// ConnectAndRetrieve connect to the WG server and retrieve all the peers informations
 func ConnectAndRetrieve(wireguard tools.WGConfig, cmd string) (*ssh.Client, error) {
 	//We read the config file to retrieve the connection arguments
 	configWG, err := config.ReadConfigFile()

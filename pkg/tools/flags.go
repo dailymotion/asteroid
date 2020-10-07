@@ -40,6 +40,7 @@ func deleteUsage() {
 	fmt.Println("   -key \"string\"        Peer key to delete")
 }
 
+// HandleFlags allows to check for all flags and checks which was given
 func HandleFlags(args []string) (*string,*string,*string,*bool,*bool){
 	addFlag := flag.NewFlagSet("add", flag.ExitOnError)
 	deleteFlag := flag.NewFlagSet("delete", flag.ExitOnError)

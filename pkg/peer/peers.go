@@ -7,7 +7,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// Using network resources given, it adds the user to the Wireguard server
+// AddNewPeer With ssh connection and peer information, Adds the peer to the Wireguard server
 func AddNewPeer(conn *ssh.Client, wireguard tools.WGConfig) error {
 	peerKey := wireguard.PeerKey
 	clientCIDR := wireguard.PeerCIDR
@@ -18,6 +18,7 @@ func AddNewPeer(conn *ssh.Client, wireguard tools.WGConfig) error {
 	return errors.Wrapf(err, "failed to run the command: %s", command)
 }
 
+// DeletePeer Delete the peer from the WG server
 func DeletePeer(conn *ssh.Client, peerKey string) error {
 	command := "sudo wg set wg0 peer " + peerKey + " remove"
 

@@ -11,13 +11,16 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+// FILENAME define the config file name that needs to be present on the computer for the app to works
 const FILENAME = ".asteroid.yaml"
 
+// Config regroup the Wireguard and Client config
 type Config struct {
 	WG 			Wireguard 	`yaml:"wireguard"`
 	ClientConfig ClientConfig `yaml:"client_config_file"`
 }
 
+// Wireguard regroup all the field needed for WG to works properly
 type Wireguard struct {
 	SSHKeyName  	string `yaml:"ssh_key_name"`
 	WireguardIP 	string `yaml:"ip"`
@@ -27,6 +30,7 @@ type Wireguard struct {
 	WGPort			string `yaml:"wg_port"`
 }
 
+// ClientConfig regroup the few fields necessarily to generate WG client config
 type ClientConfig struct {
 	Name     	string `yaml:"name"`
 	DNS     	string `yaml:"dns"`
@@ -55,6 +59,7 @@ func isStructNil(config Config) ([]string, bool) {
 	return listMissing, false
 }
 
+// ReadConfigFile retrieve the asteroid config file and put all fields into Config object
 func ReadConfigFile() (Config, error) {
 	configWG := Config{}
 
