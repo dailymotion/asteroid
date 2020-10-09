@@ -8,24 +8,24 @@ import (
 )
 
 func showConfig(wireguardConfig string) {
-	fmt.Printf("\nClient config output\n" +
-		"---------------\n" +
+	fmt.Printf("\nClient config output\n"+
+		"---------------\n"+
 		"%v\n", wireguardConfig)
 }
 
 // WGConfig Struct with all related info to create peer on WG server
 type WGConfig struct {
-	PeerKey 		  string
-	PeerCIDR 		  string
-	PeerDeleteKey 	  string
-	GenerateFile	  bool
-	GenerateOutput	  bool
-	conf 			  *config.Config
-	ServerPubKey      string
+	PeerKey        string
+	PeerCIDR       string
+	PeerDeleteKey  string
+	GenerateFile   bool
+	GenerateOutput bool
+	conf           *config.Config
+	ServerPubKey   string
 }
 
 // InitWG Init a Wireguard object to keep all related variables in one place
-func InitWG(args []string ) (WGConfig, error) {
+func InitWG(args []string) (WGConfig, error) {
 	conf, err := config.ReadConfigFile()
 	if err != nil {
 		return WGConfig{}, err
@@ -35,13 +35,13 @@ func InitWG(args []string ) (WGConfig, error) {
 	serverPubKey := ""
 
 	return WGConfig{
-		PeerCIDR: *peerCIDR,
-		PeerKey: *peerKey,
-		PeerDeleteKey: *peerDeleteKey,
-		GenerateFile:	  *generateFile,
-		GenerateOutput:	  *generateOutput,
-		conf: &conf,
-		ServerPubKey: serverPubKey}, nil
+		PeerCIDR:       *peerCIDR,
+		PeerKey:        *peerKey,
+		PeerDeleteKey:  *peerDeleteKey,
+		GenerateFile:   *generateFile,
+		GenerateOutput: *generateOutput,
+		conf:           &conf,
+		ServerPubKey:   serverPubKey}, nil
 }
 
 // Generating client configuration with all the variables given
@@ -94,14 +94,13 @@ func (wg WGConfig) writeWGConfToFile(wireguardConf string) error {
 		// Writing the config to the file
 		_, err = fmt.Fprintln(f, wireguardConf)
 		if err != nil {
-			fmt.Println(err)
 			f.Close()
 			return err
 		}
 	}
 
 	fmt.Printf(
-		"Config file created in this folder with the name: %v\n" +
+		"Config file created in this folder with the name: %v\n"+
 			"-----------------------------------------------------------\n", wg.conf.ClientConfig.Name)
 
 	return nil
