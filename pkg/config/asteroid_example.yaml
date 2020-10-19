@@ -1,0 +1,15 @@
+# Wireguard server -----------------
+wireguard:
+  ssh_key_name: wireguard_ssh_key.pem
+  username: ssh_user
+  ip: wireguard_server_ip
+  ssh_port: port
+  wg_port: 51820
+# ----------------------------------
+
+# Client configuration file ----------
+client_config_file:
+  name: wg0.conf # Name of the client config file to be created
+  dns: 9.9.9.9 # DNS with which the WG tunnel will used
+  allowed_ips: 0.0.0.0/0 # List of addresses that will get routed through the tunnel
+# ----------------------------------

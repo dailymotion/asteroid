@@ -1,3 +1,6 @@
 .idea
-/asteroid*
+asteroid
 .history
+wg0.conf
+main
+pkg/config/asteroid.yaml

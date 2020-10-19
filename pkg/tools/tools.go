@@ -1,7 +1,8 @@
-package internal
+package tools
 
 import (
 	"bytes"
+	"fmt"
 	"html"
 	"io/ioutil"
 	"net"
@@ -14,7 +15,7 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// sort to show list with asc order
+// SortedListPeer Sorts to show list with asc order
 func SortedListPeer(listPeer []map[string]string) {
 	realIPs := make([]net.IP, 0, len(listPeer))
 	realKeys := make([]string, 0, len(listPeer))
@@ -38,6 +39,7 @@ func SortedListPeer(listPeer []map[string]string) {
 
 }
 
+// RetrievePubKey Going to the .ssh folder in user home to retrieve the ssh key to connect to Wireguard server
 func RetrievePubKey(sshKey string) (string, error) {
 	var keyName string
 
@@ -50,6 +52,7 @@ func RetrievePubKey(sshKey string) (string, error) {
 	return keyName, nil
 }
 
+// ReadPubKey Reads ssh key previously obtained
 func ReadPubKey(sshKeyPath string) (ssh.AuthMethod, error) {
 	buffer, err := ioutil.ReadFile(sshKeyPath)
 	if err != nil {
@@ -63,7 +66,21 @@ func ReadPubKey(sshKeyPath string) (ssh.AuthMethod, error) {
 	return ssh.PublicKeys(key), nil
 }
 
-func CheckFlagValid(key string, address string, cmd string) error {
+// CheckFlagValid Checks that nothing is missing or that a flag as all the requirements
+func CheckFlagValid(wireguard WGConfig, cmd string) error {
+	var key string
+	var address string
+
+	if cmd == "add"{
+		key = wireguard.PeerKey
+		address = wireguard.PeerCIDR
+	} else {
+		key = wireguard.PeerDeleteKey
+		address = wireguard.PeerCIDR
+	}
+
+	fmt.Printf("Key: %v\naddresse: %v\n", key, address)
+
 	switch cmd {
 	case "add":
 		if key == "" {
@@ -86,11 +103,12 @@ func CheckFlagValid(key string, address string, cmd string) error {
 	return nil
 }
 
+// CreateEmoji Creates the planet emoji present in the Asteroid help info
 func CreateEmoji() string {
 	var emojiFinal string
 
 	emoji := [][]int{
-		// Emoticons decimal ID
+		// Emoticons decimal ID of a planet
 		{127759, 127760},
 	}
 
@@ -103,3 +121,4 @@ func CreateEmoji() string {
 	}
 	return emojiFinal
 }
+

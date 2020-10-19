@@ -5,12 +5,13 @@ import (
 	"time"
 
 	"github.com/briandowns/spinner"
-	"github.com/dailymotion/asteroid/config"
-	"github.com/dailymotion/asteroid/internal"
+	"github.com/dailymotion/asteroid/pkg/config"
+	"github.com/dailymotion/asteroid/pkg/tools"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 )
 
+// RunCommand will use the ssh connection to run the bash command on the server
 func RunCommand(conn *ssh.Client, cmd string) (string, error) {
 	sess, err := conn.NewSession()
 	if err != nil {
@@ -49,7 +50,8 @@ func RunCommand(conn *ssh.Client, cmd string) (string, error) {
 	return stringOut, nil
 }
 
-func ConnectAndRetrieve(IPAddress string, cmd string) (*ssh.Client, error) {
+// ConnectAndRetrieve connect to the WG server and retrieve all the peers informations
+func ConnectAndRetrieve(wireguard tools.WGConfig, cmd string) (*ssh.Client, error) {
 	//We read the config file to retrieve the connection arguments
 	configWG, err := config.ReadConfigFile()
 	if err != nil {
@@ -57,12 +59,12 @@ func ConnectAndRetrieve(IPAddress string, cmd string) (*ssh.Client, error) {
 	}
 
 	// We retrieve the ssh key path
-	sshKeyPath, err := internal.RetrievePubKey(configWG.SSHKeyName)
+	sshKeyPath, err := tools.RetrievePubKey(configWG.WG.SSHKeyName)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to retrieve the public key")
 	}
 
-	key, err := internal.ReadPubKey(sshKeyPath)
+	key, err := tools.ReadPubKey(sshKeyPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read the public key")
 	}
@@ -75,13 +77,13 @@ func ConnectAndRetrieve(IPAddress string, cmd string) (*ssh.Client, error) {
 
 	if cmd == "add" {
 		// We retrieve all the user vpn ip to use them for different checks
-		listPeers, err := RetrieveIPs(conn)
+		listPeers, _, err := RetrieveIPs(conn)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to retrieve VPN IPs")
 		}
 
-		if ok := CheckForDouble(listPeers, IPAddress); ok {
-			return nil, errors.New("IP already exists in the server")
+		if ok := CheckForDouble(listPeers, wireguard.PeerCIDR); ok {
+			return nil, errors.New("IP already exists on the server")
 		}
 	}
 
@@ -96,20 +98,20 @@ func connectToServer(sshKey ssh.AuthMethod, config config.Config) (*ssh.Client, 
 
 	// SSH config
 	sshConfig := ssh.ClientConfig{}
-	sshConfig.User = config.Username
+	sshConfig.User = config.WG.Username
 	sshConfig.Timeout = 10 * time.Second
 	sshConfig.Auth = []ssh.AuthMethod{
 		sshKey,
 	}
 
 	// If user doesn't want HostKey verification
-	if !config.HostKey {
+	if !config.WG.HostKey {
 		sshConfig.HostKeyCallback = ssh.InsecureIgnoreHostKey()
 	}
 
-	connection, err := ssh.Dial("tcp", config.WireguardIP+":"+config.SSHPort, &sshConfig)
+	connection, err := ssh.Dial("tcp", config.WG.WireguardIP + ":" + config.WG.SSHPort, &sshConfig)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to ssh dial %s", config.WireguardIP+":"+config.SSHPort)
+		return nil, errors.Wrapf(err, "failed to ssh dial %s", config.WG.WireguardIP + ":" + config.WG.SSHPort)
 	}
 
 	s.Stop()
