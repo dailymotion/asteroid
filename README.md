@@ -16,7 +16,7 @@ First you need to clone the repo:
 $ git clone https://github.com/dailymotion/asteroid.git
 ```
 
-Once you have it in your folder, just compile it with:
+Once you have it in your folder, just build it with:
 ```
 go build -o asteroid ./cmd/asteroid
 ```
