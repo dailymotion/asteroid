@@ -8,6 +8,25 @@ It supports :
 - Removing a peer
 - Generating Client config file
 
+## Installation
+
+### Via source
+First you need to clone the repo:
+```
+$ git clone https://github.com/dailymotion/asteroid.git
+```
+
+Once you have it in your folder, just build it with:
+```
+go build -o asteroid ./cmd/asteroid
+```
+
+This will create a binary that can be run with `./asteroid`
+
+### Via Docker
+Coming Soon
+
+
 ## Use cases
 
 ### Viewing the configuration
