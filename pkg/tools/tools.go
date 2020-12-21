@@ -2,7 +2,6 @@ package tools
 
 import (
 	"bytes"
-	"fmt"
 	"html"
 	"io/ioutil"
 	"net"
@@ -39,7 +38,7 @@ func SortedListPeer(listPeer []map[string]string) {
 
 }
 
-// RetrievePubKey Going to the .ssh folder in user home to retrieve the ssh key to connect to Wireguard server
+// RetrievePubKey Will go to the .ssh folder in the user $HOME, retrieve the ssh key and connect to the Wireguard server
 func RetrievePubKey(sshKey string) (string, error) {
 	var keyName string
 
@@ -71,15 +70,13 @@ func CheckFlagValid(wireguard WGConfig, cmd string) error {
 	var key string
 	var address string
 
-	if cmd == "add"{
+	if cmd == "add" {
 		key = wireguard.PeerKey
 		address = wireguard.PeerCIDR
 	} else {
 		key = wireguard.PeerDeleteKey
 		address = wireguard.PeerCIDR
 	}
-
-	fmt.Printf("Key: %v\naddresse: %v\n", key, address)
 
 	switch cmd {
 	case "add":
@@ -121,4 +118,3 @@ func CreateEmoji() string {
 	}
 	return emojiFinal
 }
-

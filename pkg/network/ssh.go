@@ -109,9 +109,9 @@ func connectToServer(sshKey ssh.AuthMethod, config config.Config) (*ssh.Client, 
 		sshConfig.HostKeyCallback = ssh.InsecureIgnoreHostKey()
 	}
 
-	connection, err := ssh.Dial("tcp", config.WG.WireguardIP + ":" + config.WG.SSHPort, &sshConfig)
+	connection, err := ssh.Dial("tcp", config.WG.WireguardIP+":"+config.WG.SSHPort, &sshConfig)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to ssh dial %s", config.WG.WireguardIP + ":" + config.WG.SSHPort)
+		return nil, errors.Wrapf(err, "failed to ssh dial %s", config.WG.WireguardIP+":"+config.WG.SSHPort)
 	}
 
 	s.Stop()

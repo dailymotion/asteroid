@@ -14,7 +14,7 @@ import (
 func main() {
 	var err error
 
-	// Init wireguard to keep all the value in one place
+	// Init wireguard to keep all the values in one place
 	wireguard, err := tools.InitWG(os.Args)
 	if err != nil {
 		log.Printf("\nError parsing flags: %v\n", err)
@@ -25,7 +25,7 @@ func main() {
 	switch os.Args[1] {
 	case "add":
 
-		// Checking if arguments have been given for the command
+		// Checking if enough arguments have been given for the command
 		if len(os.Args) <= 5 {
 			log.Printf("Missing Arguments\n")
 			//addFlag.Usage()
@@ -38,7 +38,7 @@ func main() {
 			log.Fatalf("\nerror with arguments: %v\n", err)
 		}
 
-		// Connect to the server and retrieve the conn object
+		// Connect to the server and get the connection
 		conn, err := network.ConnectAndRetrieve(wireguard, "add")
 		if err != nil {
 			log.Fatalf("\nerror: %v\n", err)
@@ -48,11 +48,11 @@ func main() {
 		if err := peer.AddNewPeer(conn, wireguard); err != nil {
 			log.Fatalf("error: %v\n", err)
 		} else {
-		// Message be like:
-		//################
-		//# Peer added ! #
-		//################
-		fmt.Printf("\n################\n# Peer added ! #\n################\n\n")
+			// Message be like:
+			//################
+			//# Peer added ! #
+			//################
+			fmt.Printf("\n################\n# Peer added ! #\n################\n\n")
 		}
 
 		// We retrieve all the peer vpn ip to show the new added peer
@@ -77,13 +77,14 @@ func main() {
 		}
 	case "view":
 		flag.Parse()
-		// We alert if arguments are given to the command
+		// We alert if too much arguments are given to the command
 		if len(os.Args) > 2 {
 			fmt.Printf("View doesn't take options\n\n")
 			flag.Usage()
 			os.Exit(2)
 		}
 
+		// Connect to the server and get the connection
 		conn, err := network.ConnectAndRetrieve(wireguard, "view")
 		if err != nil {
 			log.Fatalf("\nerror: %v\n", err)
@@ -115,9 +116,15 @@ func main() {
 		}
 		if err = peer.DeletePeer(conn, wireguard.PeerDeleteKey); err != nil {
 			log.Fatalf("error: %v\n", err)
+		} else {
+			// Message be like:
+			//##################
+			//# Peer deleted ! #
+			//##################
+			fmt.Printf("\n##################\n# Peer deleted ! #\n##################\n")
+			fmt.Printf("Peer %v has been deleted !\n\n", wireguard.PeerDeleteKey)
 		}
 
-		fmt.Printf("\nPeer %v deleted !\n", wireguard.PeerDeleteKey)
 		listPeers, _, err := network.RetrieveIPs(conn)
 		if err != nil {
 			log.Fatalf("error: %v\n", err)

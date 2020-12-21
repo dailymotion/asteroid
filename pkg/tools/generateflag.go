@@ -3,17 +3,19 @@ package tools
 import (
 	"errors"
 	"fmt"
-	"github.com/dailymotion/asteroid/pkg/config"
 	"os"
+
+	"github.com/dailymotion/asteroid/pkg/config"
 )
 
+// showConfig output the config that the client can use for it's Wireguard
 func showConfig(wireguardConfig string) {
 	fmt.Printf("\nClient config output\n"+
 		"---------------\n"+
 		"%v\n", wireguardConfig)
 }
 
-// WGConfig Struct with all related info to create peer on WG server
+// WGConfig Struct is for all related info to create peer on WG server
 type WGConfig struct {
 	PeerKey        string
 	PeerCIDR       string
@@ -50,7 +52,7 @@ func (wg WGConfig) generateWGConfigFile() (string, error) {
 	WGPort := wg.conf.WG.WGPort
 	address := wg.PeerCIDR
 	DNS := wg.conf.ClientConfig.DNS
-	endpoint := wg.conf.WG.WireguardIP + WGPort
+	endpoint := wg.conf.WG.WireguardIP + ":" + WGPort
 	allowedIPs := wg.conf.ClientConfig.AllowedIPs
 
 	wireguardClientConfig := fmt.Sprintf(`[Interface]
@@ -106,7 +108,7 @@ func (wg WGConfig) writeWGConfToFile(wireguardConf string) error {
 	return nil
 }
 
-// RetrieveWGConfig Will generate, show or write to a file the client configuration
+// RetrieveWGConfig Will call the show, writeFile or WriteOutput Wiregard config function
 func (wg WGConfig) RetrieveWGConfig() error {
 
 	wireguardConf, err := wg.generateWGConfigFile()

@@ -13,8 +13,6 @@ func flagUsage() {
 	fmt.Println("AUTHOR:")
 	fmt.Println("   Ben Cyril")
 	fmt.Printf("USAGE:\n   %s command [OPTIONS] [ARGUMENTS ...]\n", os.Args[0])
-	//fmt.Println("VERSION:")
-	//fmt.Println("   1.0.0")
 	fmt.Println("COMMANDS:")
 	fmt.Println("   view     View the peers present on the VPN")
 	fmt.Println("   add      Add a new peer on the VPN")
@@ -40,17 +38,17 @@ func deleteUsage() {
 	fmt.Println("   -key \"string\"        Peer key to delete")
 }
 
-// HandleFlags allows to check for all flags and checks which was given
-func HandleFlags(args []string) (*string,*string,*string,*bool,*bool){
+// HandleFlags init flags and checks which was given
+func HandleFlags(args []string) (*string, *string, *string, *bool, *bool) {
 	addFlag := flag.NewFlagSet("add", flag.ExitOnError)
 	deleteFlag := flag.NewFlagSet("delete", flag.ExitOnError)
-	// Subcommands
+	// Flags subcommands
 	peerDeleteKeyFlag := deleteFlag.String("key", "", "Peer key to delete")
 	peerKeyFlag := addFlag.String("key", "", "New peer key")
 	peerCIDRFlag := addFlag.String("address", "", "New peer address")
 	generateFile := addFlag.Bool("generateFile", false, "Generate a config file")
 	generateOutput := addFlag.Bool("generateStdout", false, "Generate a config output")
-	// We change the output of Flag Usage to better show what's the app doing
+	// We change flag usage output to better show what's the app doing
 	flag.Usage = flagUsage
 
 	// Verify that flags has been provided
