@@ -115,7 +115,7 @@ func RetrieveIPs(conn *ssh.Client) ([]map[string]string, string, error) {
 
 		if len(ipAddress) > 0 {
 			for _, v := range ipAddress {
-				if strings.Contains(v, "10.0") || strings.Contains(v, "172.16") || strings.Contains(v, "192.168"){
+				if strings.Contains(v, "10.0") || strings.Contains(v, "172.16") || strings.Contains(v, "192.168") {
 					peerIPs[key] = v
 					key = ""
 				}

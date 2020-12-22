@@ -2,8 +2,8 @@
 wireguard:
   ssh_key_name: wireguard_ssh_key.pem
   username: ssh_user
-  ip: wireguard_server_ip
-  ssh_port: port
+  ip: wireguard_server_public_ip
+  ssh_port: 22
   wg_port: 51820
 # ----------------------------------
 

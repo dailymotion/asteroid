@@ -16,25 +16,25 @@ const FILENAME = ".asteroid.yaml"
 
 // Config regroup the Wireguard and Client config
 type Config struct {
-	WG 			Wireguard 	`yaml:"wireguard"`
+	WG           Wireguard    `yaml:"wireguard"`
 	ClientConfig ClientConfig `yaml:"client_config_file"`
 }
 
 // Wireguard regroup all the field needed for WG to works properly
 type Wireguard struct {
-	SSHKeyName  	string `yaml:"ssh_key_name"`
-	WireguardIP 	string `yaml:"ip"`
-	SSHPort     	string `yaml:"ssh_port"`
-	Username    	string `yaml:"username"`
-	HostKey     	bool   `yaml:"verification_host_key"`
-	WGPort			string `yaml:"wg_port"`
+	SSHKeyName  string `yaml:"ssh_key_name"`
+	WireguardIP string `yaml:"ip"`
+	SSHPort     string `yaml:"ssh_port"`
+	Username    string `yaml:"username"`
+	HostKey     bool   `yaml:"verification_host_key"`
+	WGPort      string `yaml:"wg_port"`
 }
 
 // ClientConfig regroup the few fields necessarily to generate WG client config
 type ClientConfig struct {
-	Name     	string `yaml:"name"`
-	DNS     	string `yaml:"dns"`
-	AllowedIPs  string `yaml:"allowed_ips"`
+	Name       string `yaml:"name"`
+	DNS        string `yaml:"dns"`
+	AllowedIPs string `yaml:"allowed_ips"`
 }
 
 func isStructNil(config Config) ([]string, bool) {
