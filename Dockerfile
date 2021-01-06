@@ -7,7 +7,7 @@ ENV GO111MODULE=on \
     GOOS=linux \
     GOARCH=amd64
 
-# Tini is used to better handles signals from the applications and have a better host stability
+# Tini is used to better handles signals from the applications and have better host stability
 RUN apk add --no-cache tini
 
 # Create group, user and folders
