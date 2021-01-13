@@ -39,13 +39,14 @@ func deleteUsage() {
 }
 
 // HandleFlags init flags and checks which was given
-func HandleFlags(args []string) (*string, *string, *string, *bool, *bool) {
+func HandleFlags(args []string) (*string, *string, *string, *string, *bool, *bool) {
 	addFlag := flag.NewFlagSet("add", flag.ExitOnError)
 	deleteFlag := flag.NewFlagSet("delete", flag.ExitOnError)
 	// Flags subcommands
 	peerDeleteKeyFlag := deleteFlag.String("key", "", "Peer key to delete")
 	peerKeyFlag := addFlag.String("key", "", "New peer key")
 	peerCIDRFlag := addFlag.String("address", "", "New peer address")
+	peerNameFlag :=  addFlag.String("name", "", "New peer's name")
 	generateFile := addFlag.Bool("generateFile", false, "Generate a config file")
 	generateOutput := addFlag.Bool("generateStdout", false, "Generate a config output")
 	// We change flag usage output to better show what's the app doing
@@ -72,5 +73,5 @@ func HandleFlags(args []string) (*string, *string, *string, *bool, *bool) {
 		}
 	}
 
-	return peerDeleteKeyFlag, peerKeyFlag, peerCIDRFlag, generateFile, generateOutput
+	return peerDeleteKeyFlag, peerKeyFlag, peerCIDRFlag, peerNameFlag, generateFile, generateOutput
 }

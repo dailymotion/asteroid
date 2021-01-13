@@ -19,6 +19,7 @@ func showConfig(wireguardConfig string) {
 type WGConfig struct {
 	PeerKey        string
 	PeerCIDR       string
+	PeerName       string
 	PeerDeleteKey  string
 	GenerateFile   bool
 	GenerateOutput bool
@@ -33,12 +34,13 @@ func InitWG(args []string) (WGConfig, error) {
 		return WGConfig{}, err
 	}
 
-	peerDeleteKey, peerKey, peerCIDR, generateFile, generateOutput := HandleFlags(args)
+	peerDeleteKey, peerKey, peerCIDR, peerName, generateFile, generateOutput := HandleFlags(args)
 	serverPubKey := ""
 
 	return WGConfig{
 		PeerCIDR:       *peerCIDR,
 		PeerKey:        *peerKey,
+		PeerName:       *peerName,
 		PeerDeleteKey:  *peerDeleteKey,
 		GenerateFile:   *generateFile,
 		GenerateOutput: *generateOutput,

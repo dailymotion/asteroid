@@ -2,6 +2,7 @@ package tools
 
 import (
 	"bytes"
+	"database/sql"
 	"html"
 	"io/ioutil"
 	"net"
@@ -10,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/dailymotion/asteroid/pkg/config"
+	"github.com/dailymotion/asteroid/pkg/db"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 )
@@ -36,6 +39,49 @@ func SortedListPeer(listPeer []map[string]string) {
 		}
 	}
 
+}
+
+func AddToListPeer(listPeers []map[string]string, DBConn *sql.DB) ([]map[string]string, error){
+	var PeersList []map[string]string
+
+	for _, value := range listPeers {
+		for key, cidr := range value {
+			tmpList := make(map[string]string)
+			tmpList["cidr"] = cidr
+			tmpList["key"] = key
+			tmpList["username"] = ""
+			DBUserList, err := db.ReadKeyFromDB(DBConn)
+			if err != nil {
+				return PeersList, err
+			}
+			for _, v := range DBUserList {
+				if tmpList["key"] == v.Key {
+					tmpList["username"] = v.Username
+				}
+			}
+
+			PeersList = append(PeersList, tmpList)
+		}
+	}
+	return PeersList, nil
+}
+
+func InitDB() (*sql.DB,  config.ConfigDB, error) {
+	var conn *sql.DB
+
+	conf, err := config.RetrieveDBConfig()
+	if err != nil {
+		return nil, conf, err
+	}
+
+	if conf.DBEnabled {
+		conn, err = db.ConnectToDB(conf)
+		if err != nil {
+			return nil, conf, err
+		}
+	}
+
+	return conn, conf, nil
 }
 
 // RetrievePubKey Will go to the .ssh folder in the user $HOME, retrieve the ssh key and connect to the Wireguard server

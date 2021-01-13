@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
@@ -26,17 +27,53 @@ var (
 )
 
 // ShowListIPs create a pretty array to show the peer IPs and their respective keys
+//func ShowListIPs(listPeers []map[string]string) {
+//	var data [][]string
+//
+//	fmt.Println("MAPSHOWLIST: ", listPeers)
+//
+//	table := tablewriter.NewWriter(os.Stdout)
+//	table.SetHeader([]string{"Local IP", "Key", "Username"})
+//
+//
+//	for _, v := range listPeers {
+//		var row []string
+//		fmt.Println("V: ", v)
+//		for key, value := range v {
+//			if key == "username" && value == ""  {
+//				continue
+//			}
+//			fmt.Printf(" y: %v\n", value)
+//			row = append(row, value)
+//		}
+//		data = append(data, row)
+//	}
+//
+//	for _, v := range data {
+//		table.Append(v)
+//	}
+//	table.SetBorder(false)
+//	table.Render()
+//}
+
+// ShowListIPs create a pretty array to show the peer IPs, their respective keys and users
 func ShowListIPs(listPeers []map[string]string) {
 	var data [][]string
-	var row []string
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Peer", "Local IP"})
+	table.SetHeader([]string{"WG IP", "Key", "User"})
 
-	for _, v := range listPeers {
-		for x, y := range v {
-			row := []string{x, y}
-			data = append(data, row)
+
+	for _, value := range listPeers {
+		var row []string
+
+		var keys []string
+		for k := range value {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			row = append(row, value[k])
 		}
 		data = append(data, row)
 	}
@@ -44,6 +81,7 @@ func ShowListIPs(listPeers []map[string]string) {
 	for _, v := range data {
 		table.Append(v)
 	}
+	table.SetBorder(false)
 	table.Render()
 }
 
@@ -76,6 +114,7 @@ func readerToString(cmdReader io.Reader) (string, error) {
 func RetrieveIPs(conn *ssh.Client) ([]map[string]string, string, error) {
 	var listPeers []map[string]string
 	var serverPubKey string
+
 	key := ""
 
 	// command to show all peers created on the server

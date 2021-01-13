@@ -17,9 +17,6 @@ RUN addgroup --gid 11000 -S asteroid && adduser --uid 11000 -S asteroid -G aster
     && mkdir /home/asteroid/dist \
     && chown -R asteroid:asteroid /home/asteroid
 
-# Tell docker that all future commands should run as the asteroid user
-USER asteroid
-
 # Move to build directory
 WORKDIR /home/asteroid/build
 
@@ -30,7 +27,11 @@ COPY . .
 COPY pkg/config/asteroid_example.yaml /home/asteroid/.asteroid.yaml
 
 # Download dependencies using go mod
-RUN go mod download
+RUN go mod vendor \
+    && go mod download
+
+# Tell docker that all future commands should run as the asteroid user
+USER asteroid
 
 # Build the application with specific ENV
 RUN GOOS=${GOOS} GOARCH=${GOARCH} go build -o asteroid ./cmd/asteroid

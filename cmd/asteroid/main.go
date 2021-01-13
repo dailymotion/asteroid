@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/dailymotion/asteroid/pkg/network"
+	"github.com/dailymotion/asteroid/pkg/db"
 	"github.com/dailymotion/asteroid/pkg/peer"
 	"github.com/dailymotion/asteroid/pkg/tools"
 )
@@ -14,10 +15,16 @@ import (
 func main() {
 	var err error
 
-	// Init wireguard to keep all the values in one place
+	// Init Wireguard to keep all the values in one place
 	wireguard, err := tools.InitWG(os.Args)
 	if err != nil {
 		log.Printf("\nError parsing flags: %v\n", err)
+		os.Exit(1)
+	}
+
+	DBconn, DBConf, err := tools.InitDB()
+	if err != nil {
+		log.Printf("\nError initializing DB: %v\n", err)
 		os.Exit(1)
 	}
 
@@ -75,6 +82,14 @@ func main() {
 				log.Fatalf("\nerror: %v\n", err)
 			}
 		}
+
+		if DBConf.DBEnabled {
+			fmt.Println("Adding user in DB")
+			err = db.InsertUserInDB(DBconn, wireguard.PeerKey, wireguard.PeerCIDR, wireguard.PeerName)
+			if err != nil {
+				log.Fatalf("\nerror: %v\n", err)
+			}
+		}
 	case "view":
 		flag.Parse()
 		// We alert if too much arguments are given to the command
@@ -84,19 +99,25 @@ func main() {
 			os.Exit(2)
 		}
 
-		// Connect to the server and get the connection
+		//Connect to the server and get the connection
 		conn, err := network.ConnectAndRetrieve(wireguard, "view")
 		if err != nil {
 			log.Fatalf("\nerror: %v\n", err)
 		}
 
-		listPeers, _, err := network.RetrieveIPs(conn)
+		tmpListPeers, _, err := network.RetrieveIPs(conn)
+		if err != nil {
+			log.Fatalf("\nerror: %v\n", err)
+		}
+
+		listPeers, err := tools.AddToListPeer(tmpListPeers, DBconn)
 		if err != nil {
 			log.Fatalf("\nerror: %v\n", err)
 		}
 
 		fmt.Printf("\n\nPeers informations\n-------------------\n")
 		network.ShowListIPs(listPeers)
+		//network.ShowListIPs(merguez)
 
 	case "delete":
 		if len(os.Args) < 3 {
@@ -123,6 +144,11 @@ func main() {
 			//##################
 			fmt.Printf("\n##################\n# Peer deleted ! #\n##################\n")
 			fmt.Printf("Peer %v has been deleted !\n\n", wireguard.PeerDeleteKey)
+		}
+
+		err = db.DeleteUserInDB(DBconn, wireguard.PeerDeleteKey)
+		if err != nil {
+			log.Fatalf("\nerror: %v\n", err)
 		}
 
 		listPeers, _, err := network.RetrieveIPs(conn)
