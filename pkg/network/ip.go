@@ -53,12 +53,6 @@ func ShowListIPs(listPeers []map[string]string) {
 
 	for _, value := range listPeers {
 		row := sortList(value)
-		//for k := range value {
-		//	row = append(row,k )
-		//	//row = append(row, "")
-		//	data = append(data, row)
-		//}
-		//row = sortList(value)
 		data = append(data, row)
 	}
 

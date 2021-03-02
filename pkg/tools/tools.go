@@ -37,20 +37,6 @@ func CheckArguments(args []string, flagType string) error {
 	return nil
 }
 
-// CheckForDouble _
-//func CheckForDouble(listPeer []map[string]string, IPAddress string) bool {
-//	cleanIP := IPAddress[:len(IPAddress)-3]
-//
-//	for _, v := range listPeer {
-//		for _, ip := range v {
-//			if ip == cleanIP {
-//				return true
-//			}
-//		}
-//	}
-//	return false
-//}
-
 func CheckIfPresent(peerList []map[string]string, deleteKey string) bool {
 
 	for _, peers := range peerList {
