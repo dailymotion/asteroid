@@ -13,3 +13,13 @@ client_config_file:
   dns: 9.9.9.9 # DNS with which the WG tunnel will used
   allowed_ips: 0.0.0.0/0 # List of addresses that will get routed through the tunnel
 # ----------------------------------
+
+# Database configuration ----------
+db:
+  enabled: true # Enable the use of the database
+  host: postgres  # Database Host, ex: localhost/192.168.1.5
+  port: 5432
+  username: postgres # Username to access db
+  password: password # Username password
+  dbname: asteroid # Database name
+# ----------------------------------

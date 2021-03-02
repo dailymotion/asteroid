@@ -6,6 +6,7 @@ import (
 	"os/user"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v2"
@@ -17,7 +18,8 @@ const FILENAME = ".asteroid.yaml"
 // Config regroup the Wireguard and Client config
 type Config struct {
 	WG           Wireguard    `yaml:"wireguard"`
-	ClientConfig ClientConfig `yaml:"client_config_file"`
+	ClientConfig ClientConfig   `yaml:"client_config_file"`
+	DB			ConfigDB		  `yaml:"db"`
 }
 
 // Wireguard regroup all the field needed for WG to works properly
@@ -30,11 +32,28 @@ type Wireguard struct {
 	WGPort      string `yaml:"wg_port"`
 }
 
-// ClientConfig regroup the few fields necessarily to generate WG client config
+// ClientConfig regroup the few necessarily fields to generate WG client config
 type ClientConfig struct {
 	Name       string `yaml:"name"`
 	DNS        string `yaml:"dns"`
 	AllowedIPs string `yaml:"allowed_ips"`
+}
+
+// Database regroup the fielsds to connect to Postgresql DB
+type ConfigDB struct {
+	DBEnabled  bool   `yaml:"enabled"`
+	DbHost     string `yaml:"host"`
+	DbPort     int    `yaml:"port"`
+	DbUsername string `yaml:"username"`
+	DbPassword string `yaml:"password"`
+	DbName     string `yaml:"dbname"`
+}
+
+type User struct {
+	Username string		`json:"username"`
+	Key		 string 	`json:"key"`
+	CIDR	 string 	`json:"cidr"`
+	Date	 time.Time	`json:"time"`
 }
 
 func isStructNil(config Config) ([]string, bool) {
@@ -103,4 +122,13 @@ func ReadConfigFile() (Config, error) {
 	}
 
 	return configWG, nil
+}
+
+// RetrieveDBConfig read the config file and add the DB values in the struct
+func RetrieveDBConfig() (ConfigDB, error) {
+	conf, err := ReadConfigFile()
+	if err != nil {
+		return conf.DB, err
+	}
+	return conf.DB, err
 }
