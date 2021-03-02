@@ -20,6 +20,6 @@ db:
   host: postgres  # Database Host, ex: localhost/192.168.1.5
   port: 5432
   username: postgres # Username to access db
-  password: merguez # Username password
+  password: password # Username password
   dbname: asteroid # Database name
 # ----------------------------------
