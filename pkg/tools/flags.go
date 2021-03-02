@@ -20,6 +20,7 @@ func flagUsage() {
 	fmt.Println("OPTIONS:")
 	fmt.Println("   -address \"string\"   New peer address (to use with add)")
 	fmt.Println("   -key \"string\"       New peer key (to use with add and delete)")
+	fmt.Println("   -name \"string\"       Allows to gives a username for the key (to use with add)")
 	fmt.Println("   -generateFile       Generate a file with all the client configurations (to use with add)")
 	fmt.Println("   -generateStdout     Generate an output with all the client configurations (to use with add)")
 }
@@ -27,8 +28,9 @@ func flagUsage() {
 func addUsage() {
 	fmt.Printf("USAGE:\n   %s [OPTIONS] [ARGUMENTS ...]\n", "add")
 	fmt.Println("OPTIONS:")
-	fmt.Println("   -address \"string\"    New peer address (to use with add)")
-	fmt.Println("   -key \"string\"        New peer key (to use with add and delete)")
+	fmt.Println("   -address \"string\"    New peer address")
+	fmt.Println("   -key \"string\"        New peer key")
+	fmt.Println("   -name \"string\"       Allows to gives a username for the key")
 
 }
 

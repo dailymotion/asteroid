@@ -98,7 +98,7 @@ func (wg WGConfig) writeWGConfToFile(wireguardConf string) error {
 		// Writing the config to the file
 		_, err = fmt.Fprintln(f, wireguardConf)
 		if err != nil {
-			f.Close()
+			//f.Close()
 			return err
 		}
 	}

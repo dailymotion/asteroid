@@ -1,13 +1,13 @@
 package tools
 
 import (
-	"bytes"
 	"database/sql"
+	"flag"
+	"fmt"
 	"html"
 	"io/ioutil"
-	"net"
+	"os"
 	"os/user"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -17,55 +17,100 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// SortedListPeer Sorts to show list with asc order
-func SortedListPeer(listPeer []map[string]string) {
-	realIPs := make([]net.IP, 0, len(listPeer))
-	realKeys := make([]string, 0, len(listPeer))
-
-	for _, v := range listPeer {
-		for y, z := range v {
-			realIPs = append(realIPs, net.ParseIP(z))
-			realKeys = append(realKeys, y)
+func CheckArguments(args []string, flagType string) error {
+	switch flags := flagType; flags {
+	case "add":
+		if len(args) <= 5 {
+			return errors.New("missing Arguments\n")
+		}
+	case "view":
+		// We alert if too much arguments are given to the command
+		if len(os.Args) > 2 {
+			flag.Usage()
+			return errors.New("View doesn't take options\n\n")
+		}
+	case "delete":
+		if len(os.Args) < 3 {
+			return errors.New("issue with argument")
 		}
 	}
-
-	sort.Slice(realIPs, func(i, j int) bool {
-		return bytes.Compare(realIPs[i], realIPs[j]) < 0
-	})
-
-	for k, v := range listPeer {
-		for y := range v {
-			listPeer[k][y] = realIPs[k].String()
-		}
-	}
-
+	return nil
 }
 
-func AddToListPeer(listPeers []map[string]string, DBConn *sql.DB) ([]map[string]string, error){
-	var PeersList []map[string]string
+// CheckForDouble _
+//func CheckForDouble(listPeer []map[string]string, IPAddress string) bool {
+//	cleanIP := IPAddress[:len(IPAddress)-3]
+//
+//	for _, v := range listPeer {
+//		for _, ip := range v {
+//			if ip == cleanIP {
+//				return true
+//			}
+//		}
+//	}
+//	return false
+//}
 
+func CheckIfPresent(peerList []map[string]string, deleteKey string) bool {
+
+	for _, peers := range peerList {
+		for key, value := range peers {
+			if key == "key" {
+				if value == deleteKey  {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+func PrintResult(flagType string, key string) {
+	switch flagType {
+	case "add":
+		// Message be like:
+		//################
+		//# Peer added ! #
+		//################
+		fmt.Printf("\n################\n# Peer added ! #\n################\n")
+		fmt.Printf("Peer: %v has been added !\n", key)
+	case "delete":
+		// Message be like:
+		//##################
+		//# Peer deleted ! #
+		//##################
+		fmt.Printf("\n##################\n# Peer deleted ! #\n##################\n")
+		fmt.Printf("Peer: %v has been deleted !\n", key)
+	}
+}
+
+// AddToListPeer Will add the corresponding user to it's key in the list
+func AddToListPeer(listPeers []map[string]string, DBConn *sql.DB) ([]map[string]string, error){
+	var peersList []map[string]string
 	for _, value := range listPeers {
 		for key, cidr := range value {
 			tmpList := make(map[string]string)
 			tmpList["cidr"] = cidr
 			tmpList["key"] = key
 			tmpList["username"] = ""
-			DBUserList, err := db.ReadKeyFromDB(DBConn)
-			if err != nil {
-				return PeersList, err
-			}
-			for _, v := range DBUserList {
-				if tmpList["key"] == v.Key {
-					tmpList["username"] = v.Username
+			if DBConn != nil {
+				DBUserList, err := db.ReadKeyFromDB(DBConn)
+				if err != nil {
+					return peersList, err
+				}
+				for _, v := range DBUserList {
+					if tmpList["key"] == v.Key {
+						tmpList["username"] = v.Username
+					}
 				}
 			}
-
-			PeersList = append(PeersList, tmpList)
+			peersList = append(peersList, tmpList)
 		}
 	}
-	return PeersList, nil
+	return peersList, nil
 }
 
+// InitDB will retrieve the config and start a connection with the DB
 func InitDB() (*sql.DB,  config.ConfigDB, error) {
 	var conn *sql.DB
 
@@ -163,4 +208,37 @@ func CreateEmoji() string {
 		}
 	}
 	return emojiFinal
+}
+
+func CheckForDouble(peerList []map[string]string, wireguard *WGConfig) bool {
+	for _, peers := range peerList {
+		for key, cidr := range peers {
+			if key == wireguard.PeerKey || cidr == wireguard.PeerCIDR {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func RetrieveAndCheckForDouble(DBConn *sql.DB, DBConf config.ConfigDB,
+	wireguard *WGConfig, tmpListPeers []map[string]string, serverPubKey string) error {
+
+	wireguard.ServerPubKey = serverPubKey
+
+	// If DB is enabled, add user into DB
+	for _, peers := range tmpListPeers {
+		for key, cidr := range peers {
+			if key == wireguard.PeerKey || cidr == wireguard.PeerCIDR {
+				return errors.New("IP/Key already exist on the server")
+			}
+		}
+	}
+	if DBConf.DBEnabled {
+		err := db.InsertUserInDB(DBConn, wireguard.PeerKey, wireguard.PeerCIDR, wireguard.PeerName)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -1,6 +1,7 @@
 package network
 
 import (
+	"database/sql"
 	"log"
 	"time"
 
@@ -51,42 +52,36 @@ func RunCommand(conn *ssh.Client, cmd string) (string, error) {
 }
 
 // ConnectAndRetrieve connect to the WG server and retrieve all the peers informations
-func ConnectAndRetrieve(wireguard tools.WGConfig, cmd string) (*ssh.Client, error) {
+func ConnectAndRetrieve(wireguard *tools.WGConfig, cmd string) (*ssh.Client, error) {
 	//We read the config file to retrieve the connection arguments
 	configWG, err := config.ReadConfigFile()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read the config file")
 	}
-
 	// We retrieve the ssh key path
 	sshKeyPath, err := tools.RetrievePubKey(configWG.WG.SSHKeyName)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to retrieve the public key")
 	}
-
 	key, err := tools.ReadPubKey(sshKeyPath)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read the public key")
 	}
-
 	// We're creating the connection to the server
 	conn, err := connectToServer(key, configWG)
 	if err != nil {
 		return nil, errors.Wrap(err, "Failed to connect to the server. Are you connected to the VPN ?")
 	}
-
 	if cmd == "add" {
 		// We retrieve all the user vpn ip to use them for different checks
 		listPeers, _, err := RetrieveIPs(conn)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to retrieve VPN IPs")
 		}
-
-		if ok := CheckForDouble(listPeers, wireguard.PeerCIDR); ok {
+		if ok := tools.CheckForDouble(listPeers, wireguard); ok {
 			return nil, errors.New("IP already exists on the server")
 		}
 	}
-
 	return conn, nil
 }
 
@@ -116,4 +111,20 @@ func connectToServer(sshKey ssh.AuthMethod, config config.Config) (*ssh.Client, 
 
 	s.Stop()
 	return connection, nil
+}
+
+func RetrieveAndMatchPeer(conn *ssh.Client, DBConn *sql.DB ) ([]map[string]string, error) {
+	// We retrieve all the peer vpn ips to show the new added peer
+	tmpListPeers, _, err := RetrieveIPs(conn)
+	if err != nil {
+		return nil, err
+	}
+
+	// Matching map with key/cidr/user in a list
+	listPeers, err := tools.AddToListPeer(tmpListPeers, DBConn)
+	if err != nil {
+		return nil, err
+	}
+
+	return listPeers, nil
 }

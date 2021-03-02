@@ -32,7 +32,6 @@ func ConnectToDB(config config.ConfigDB) (*sql.DB, error) {
 
 // InsertUserInDB will insert user info into the DB
 func InsertUserInDB(db *sql.DB, key string, cidr string, name string) error {
-	fmt.Println("Adding user in DB in Function")
 	now := time.Now()
 
 	sqlStatement := `
@@ -40,10 +39,12 @@ func InsertUserInDB(db *sql.DB, key string, cidr string, name string) error {
 	VALUES ($1, $2, $3, $4)`
 
 	_, err := db.Exec(sqlStatement, name, key, cidr, now)
+	//pqErr := err.(*pq.Error)
+
 	if err != nil {
 		return err
 	}
-	fmt.Println("Adding user in DB DONE")
+
 	return nil
 }
 
@@ -73,7 +74,6 @@ func ReadKeyFromDB(db *sql.DB) ([]config.User, error) {
 		log.Fatal(err)
 	}
 
-	//fmt.Println("DATE: ", user.Date.Format(layout))
 	return userList, nil
 }
 
@@ -86,7 +86,6 @@ func DeleteUserInDB(db *sql.DB, key string) error {
 	if err != nil {
 		return err
 	}
-	fmt.Println("Deleting user from DB DONE")
 	return nil
 }
 

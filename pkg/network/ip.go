@@ -26,35 +26,23 @@ var (
 	cidrSixteenBit = "192.168"
 )
 
-// ShowListIPs create a pretty array to show the peer IPs and their respective keys
-//func ShowListIPs(listPeers []map[string]string) {
-//	var data [][]string
-//
-//	fmt.Println("MAPSHOWLIST: ", listPeers)
-//
-//	table := tablewriter.NewWriter(os.Stdout)
-//	table.SetHeader([]string{"Local IP", "Key", "Username"})
-//
-//
-//	for _, v := range listPeers {
-//		var row []string
-//		fmt.Println("V: ", v)
-//		for key, value := range v {
-//			if key == "username" && value == ""  {
-//				continue
-//			}
-//			fmt.Printf(" y: %v\n", value)
-//			row = append(row, value)
-//		}
-//		data = append(data, row)
-//	}
-//
-//	for _, v := range data {
-//		table.Append(v)
-//	}
-//	table.SetBorder(false)
-//	table.Render()
-//}
+// The sorting is due to the fact that iterating on a map is completely random
+// To be able to show Ip / Key / User in the end we need to use sort to
+// place the item in the place we want them to be
+func sortList(value map[string]string) []string {
+	var keys []string
+	var row []string
+
+	for k := range value {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	for _, k := range keys {
+		row = append(row, value[k])
+	}
+
+	return row
+}
 
 // ShowListIPs create a pretty array to show the peer IPs, their respective keys and users
 func ShowListIPs(listPeers []map[string]string) {
@@ -63,18 +51,14 @@ func ShowListIPs(listPeers []map[string]string) {
 	table := tablewriter.NewWriter(os.Stdout)
 	table.SetHeader([]string{"WG IP", "Key", "User"})
 
-
 	for _, value := range listPeers {
-		var row []string
-
-		var keys []string
-		for k := range value {
-			keys = append(keys, k)
-		}
-		sort.Strings(keys)
-		for _, k := range keys {
-			row = append(row, value[k])
-		}
+		row := sortList(value)
+		//for k := range value {
+		//	row = append(row,k )
+		//	//row = append(row, "")
+		//	data = append(data, row)
+		//}
+		//row = sortList(value)
 		data = append(data, row)
 	}
 
@@ -83,20 +67,6 @@ func ShowListIPs(listPeers []map[string]string) {
 	}
 	table.SetBorder(false)
 	table.Render()
-}
-
-// CheckForDouble _
-func CheckForDouble(listPeer []map[string]string, IPAddress string) bool {
-	cleanIP := IPAddress[:len(IPAddress)-3]
-
-	for _, v := range listPeer {
-		for _, ip := range v {
-			if ip == cleanIP {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 func readerToString(cmdReader io.Reader) (string, error) {
@@ -114,7 +84,6 @@ func readerToString(cmdReader io.Reader) (string, error) {
 func RetrieveIPs(conn *ssh.Client) ([]map[string]string, string, error) {
 	var listPeers []map[string]string
 	var serverPubKey string
-
 	key := ""
 
 	// command to show all peers created on the server
@@ -136,8 +105,11 @@ func RetrieveIPs(conn *ssh.Client) ([]map[string]string, string, error) {
 			}
 			if len(ipAddress) > 0 {
 				for _, v := range ipAddress {
-					if strings.Contains(v, cidrTwentyfourBit) || strings.Contains(v, cidrTwentyBit) || strings.Contains(v, cidrSixteenBit) {
+					if strings.Contains(v, cidrTwentyfourBit) ||
+						strings.Contains(v, cidrTwentyBit) ||
+						strings.Contains(v, cidrSixteenBit) {
 						peerIPs[key] = v
+						peerIPs["username"] = ""
 						key = ""
 					}
 				}
@@ -154,7 +126,9 @@ func RetrieveIPs(conn *ssh.Client) ([]map[string]string, string, error) {
 
 		if len(ipAddress) > 0 {
 			for _, v := range ipAddress {
-				if strings.Contains(v, "10.0") || strings.Contains(v, "172.16") || strings.Contains(v, "192.168") {
+				if strings.Contains(v, cidrTwentyfourBit) ||
+					strings.Contains(v, cidrTwentyBit) ||
+					strings.Contains(v, cidrSixteenBit) {
 					peerIPs[key] = v
 					key = ""
 				}
